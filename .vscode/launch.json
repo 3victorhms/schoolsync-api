@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-SchoolsyncApplication<schoolsync>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "br.cefetmg.schoolsync.SchoolsyncApplication",
+            "projectName": "schoolsync",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
