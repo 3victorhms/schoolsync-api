@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: schoolsync-api
+
+  datasource:
+    url: ${DATASOURCE_URL:jdbc:mysql://localhost:3306/schoolsync}
+    username: ${DATASOURCE_USER:root}
+    password: ${DATASOURCE_PWD:}
+    driver-class-name: ${DATASOURCE_DRIVER:com.mysql.cj.jdbc.Driver}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
