@@ -1,5 +1,6 @@
 package br.cefetmg.schoolsync_api.service;
 
+import br.cefetmg.schoolsync_api.security.SenhaEncoder;
 import br.cefetmg.schoolsync_api.entity.Usuario;
 import br.cefetmg.schoolsync_api.dto.usuario.*;
 import br.cefetmg.schoolsync_api.repository.UsuarioRepository;
@@ -17,11 +18,13 @@ import java.util.Optional;
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
+    private final SenhaEncoder senhaEncoder;
 
     private final Logger log = LoggerFactory.getLogger(UsuarioService.class);
 
-    public UsuarioService(UsuarioRepository usuarioRepository) {
+    public UsuarioService(UsuarioRepository usuarioRepository, SenhaEncoder senhaEncoder) {
         this.usuarioRepository = usuarioRepository;
+        this.senhaEncoder = senhaEncoder;
     }
 
     public Optional<UsuarioResponseDTO> findOne(String id) {
@@ -56,7 +59,7 @@ public class UsuarioService {
     }
 
     public UsuarioResponseDTO save(UsuarioRequestDTO dto) {
-        log.debug("Request to save Usuario : {}", dto);
+        log.debug("Request to save Usuario : {}", dto.getEmail());
 
         if (dto.getSenha() == null || dto.getSenha().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A senha é obrigatória");
@@ -69,7 +72,7 @@ public class UsuarioService {
         Usuario usuario = new Usuario();
         usuario.setNome(dto.getNome());
         usuario.setEmail(dto.getEmail());
-        usuario.setSenha(dto.getSenha());
+        usuario.setSenha(senhaEncoder.criptografar(dto.getSenha()));
         usuario.setFoto(dto.getFoto());
 
         usuario = usuarioRepository.save(usuario);
@@ -77,7 +80,7 @@ public class UsuarioService {
     }
 
     public UsuarioResponseDTO update(String id, UsuarioRequestDTO dto) {
-        log.debug("Request to update Usuario : {}", dto);
+        log.debug("Request to update Usuario : {}", id);
 
         Optional<Usuario> usuarioOpt = usuarioRepository.findById(id);
 
@@ -97,7 +100,7 @@ public class UsuarioService {
 
         // só atualiza a senha se vier um valor novo e não vazio; senão mantém a senha atual no banco
         if (dto.getSenha() != null && !dto.getSenha().isBlank()) {
-            usuario.setSenha(dto.getSenha());
+            usuario.setSenha(senhaEncoder.criptografar(dto.getSenha()));
         }
 
         usuario.setFoto(dto.getFoto());
@@ -109,18 +112,16 @@ public class UsuarioService {
     public Optional<UsuarioResponseDTO> autenticar(String email, String senha) {
         log.debug("Request to autenticar Usuario : {}", email);
 
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmailAndSenha(email, senha);
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
 
         if (usuarioOpt.isPresent()) {
-            Usuario usuario = usuarioOpt.get();
-            return Optional.of(new UsuarioResponseDTO(usuario));
+            if (senhaEncoder.verificar(senha, usuarioOpt.get().getSenha())) {
+                Usuario usuario = usuarioOpt.get();
+                return Optional.of(new UsuarioResponseDTO(usuario));
+            }
+            return Optional.empty();
         } else {
             return Optional.empty();
         }
-    }
-
-    public boolean verificarLogin(String email) {
-        log.debug("Request to verificarLogin : {}", email);
-        return usuarioRepository.existsByEmail(email);
     }
 }

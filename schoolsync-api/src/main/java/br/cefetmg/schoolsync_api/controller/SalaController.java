@@ -68,6 +68,27 @@ public class SalaController {
         return ResponseEntity.ok(salaService.listarPorUsuario(idUsuario));
     }
 
+    @DeleteMapping("/{idSala}/membros/{idUsuarioRemover}")
+    @Operation(summary = "Remover membro da sala")
+    public ResponseEntity<Void> excluirMembro(
+            @PathVariable String idSala,
+            @PathVariable String idUsuarioRemover,
+            @RequestParam String idUsuarioLogado
+    ) {
+        salaService.excluirMembro(idSala, idUsuarioRemover, idUsuarioLogado);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{idSala}/sair")
+    @Operation(summary = "Sair da sala")
+    public ResponseEntity<Void> sair(
+            @PathVariable String idSala,
+            @RequestParam String idUsuario
+    ) {
+        salaService.sair(idSala, idUsuario);
+        return ResponseEntity.noContent().build();
+    }
+
     @DeleteMapping("/{id}")
     @Operation(summary = "Excluir sala")
     public ResponseEntity<Void> excluir(@PathVariable String id) {

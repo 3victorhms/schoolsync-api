@@ -1,9 +1,8 @@
 package br.cefetmg.schoolsync_api.entity;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -23,34 +22,36 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "tb_sala")
+@Table(name = "tb_comentario")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Sala {
+public class Comentario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @Column(nullable = false, length = 150)
-    private String nome;
+    @Column(nullable = false, length = 1000)
+    private String texto;
 
-    @Column(name = "codigo_convite", nullable = false, length = 6, unique = true)
-    private String codigoConvite;
+    @Column(name = "data_criacao", nullable = false)
+    private LocalDateTime dataCriacao;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_lider", nullable = false)
-    private Usuario lider;
+    @JoinColumn(name = "id_atividade", nullable = false)
+    private Atividade atividade;
 
-    @OneToMany(mappedBy = "sala", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("dataEntrada ASC")
-    private List<Membros> membros = new ArrayList<>();
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_usuario", nullable = false)
+    private Usuario usuario;
 
-    @OneToMany(mappedBy = "sala", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Atividade> atividades = new HashSet<>();
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_comentario_pai")
+    private Comentario comentarioPai;
 
-    @OneToMany(mappedBy = "sala", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Grupo> grupos = new ArrayList<>();
+    @OneToMany(mappedBy = "comentarioPai", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("dataCriacao ASC")
+    private List<Comentario> respostas = new ArrayList<>();
 }

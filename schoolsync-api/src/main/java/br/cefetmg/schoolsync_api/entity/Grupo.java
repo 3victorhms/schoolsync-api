@@ -1,9 +1,7 @@
 package br.cefetmg.schoolsync_api.entity;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -23,12 +21,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "tb_sala")
+@Table(name = "tb_grupo")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Sala {
+public class Grupo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -41,16 +39,18 @@ public class Sala {
     private String codigoConvite;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_lider", nullable = false)
-    private Usuario lider;
+    @JoinColumn(name = "id_sala", nullable = false)
+    private Sala sala;
 
-    @OneToMany(mappedBy = "sala", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_criador", nullable = false)
+    private Usuario criador;
+
+    @OneToMany(mappedBy = "grupo", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("dataEntrada ASC")
-    private List<Membros> membros = new ArrayList<>();
+    private List<GrupoMembro> membros = new ArrayList<>();
 
-    @OneToMany(mappedBy = "sala", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Atividade> atividades = new HashSet<>();
-
-    @OneToMany(mappedBy = "sala", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Grupo> grupos = new ArrayList<>();
+    @OneToMany(mappedBy = "grupo", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("dataCriacao ASC")
+    private List<Tarefa> tarefas = new ArrayList<>();
 }

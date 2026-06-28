@@ -2,6 +2,8 @@ package br.cefetmg.schoolsync_api.entity;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import jakarta.persistence.CascadeType;
@@ -57,4 +59,7 @@ public class Atividade {
 
     @OneToMany(mappedBy = "atividade", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Caderno> noCaderno = new HashSet<>();
+
+    @OneToMany(mappedBy = "atividade", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comentario> comentarios = new ArrayList<>();
 }

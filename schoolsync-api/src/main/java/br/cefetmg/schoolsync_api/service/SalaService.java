@@ -7,6 +7,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import br.cefetmg.schoolsync_api.dto.sala.SalaRequestDTO;
 import br.cefetmg.schoolsync_api.dto.sala.SalaResponseDTO;
@@ -33,7 +34,7 @@ public class SalaService {
 
     public SalaResponseDTO criar(SalaRequestDTO dto, String idLider) {
         Usuario lider = usuarioRepository.findById(idLider)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário líder não encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Usuario lider nao encontrado"));
 
         Sala sala = new Sala();
         sala.setNome(dto.getNome());
@@ -54,7 +55,7 @@ public class SalaService {
 
     public SalaResponseDTO atualizar(String id, SalaRequestDTO dto) {
         Sala sala = salaRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Sala não encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
 
         sala.setNome(dto.getNome());
 
@@ -65,10 +66,10 @@ public class SalaService {
 
     public SalaResponseDTO entrar(String codigoConvite, String idUsuario) {
         Sala sala = salaRepository.findByCodigoConvite(codigoConvite)
-                .orElseThrow(() -> new EntityNotFoundException("Sala não encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
 
         Usuario usuario = usuarioRepository.findById(idUsuario)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Usuario nao encontrado"));
 
         boolean jaMembro = membrosRepository.existsBySala_IdAndUsuario_Id(
                 sala.getId(),
@@ -76,7 +77,7 @@ public class SalaService {
         );
 
         if (jaMembro) {
-            throw new IllegalArgumentException("Você já está nesta sala");
+            throw new IllegalArgumentException("Voce ja esta nesta sala");
         }
 
         Membros novoMembro = new Membros();
@@ -98,7 +99,7 @@ public class SalaService {
 
     public SalaResponseDTO buscarPorId(String idSala, String idUsuarioLogado) {
         Sala sala = salaRepository.findById(idSala)
-                .orElseThrow(() -> new EntityNotFoundException("Sala não encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
 
         Map<String, String> statusPorAtividade = buscarStatusPorAtividade(
                 idSala,
@@ -115,11 +116,53 @@ public class SalaService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public void excluir(String id) {
         Sala sala = salaRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Sala não encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
 
         salaRepository.delete(sala);
+    }
+
+    @Transactional
+    public void excluirMembro(String idSala, String idUsuarioRemover, String idUsuarioLogado) {
+        Sala sala = salaRepository.findById(idSala)
+                .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
+
+        if (!sala.getLider().getId().equals(idUsuarioLogado)) {
+            throw new IllegalArgumentException("Apenas o lider da sala pode remover membros");
+        }
+
+        if (sala.getLider().getId().equals(idUsuarioRemover)) {
+            throw new IllegalArgumentException("O lider da sala nao pode ser removido");
+        }
+
+        removerVinculoDoUsuario(sala, idUsuarioRemover);
+    }
+
+    @Transactional
+    public void sair(String idSala, String idUsuario) {
+        Sala sala = salaRepository.findById(idSala)
+                .orElseThrow(() -> new EntityNotFoundException("Sala não encontrada"));
+
+        if (sala.getLider().getId().equals(idUsuario)) {
+            throw new IllegalArgumentException("O lider da sala não pode sair da sala");
+        }
+
+        removerVinculoDoUsuario(sala, idUsuario);
+    }
+
+    private void removerVinculoDoUsuario(Sala sala, String idUsuario) {
+        Membros membro = membrosRepository
+                .findBySala_IdAndUsuario_Id(sala.getId(), idUsuario)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado nesta sala"));
+
+        cadernoRepository.deleteAll(
+                cadernoRepository.findByAtividade_Sala_IdAndUsuario_Id(sala.getId(), idUsuario)
+        );
+
+        sala.getMembros().removeIf(m -> m.getId().equals(membro.getId()));
+        membrosRepository.delete(membro);
     }
 
     private Map<String, String> buscarStatusPorAtividade(String idSala, String idUsuario) {

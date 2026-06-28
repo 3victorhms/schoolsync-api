@@ -1,5 +1,6 @@
 package br.cefetmg.schoolsync_api.controller;
 
+import br.cefetmg.schoolsync_api.dto.usuario.LoginDTO;
 import br.cefetmg.schoolsync_api.dto.usuario.UsuarioRequestDTO;
 import br.cefetmg.schoolsync_api.dto.usuario.UsuarioResponseDTO;
 import br.cefetmg.schoolsync_api.service.UsuarioService;
@@ -52,10 +53,12 @@ public class UsuarioController {
 
     @PostMapping("/autenticar")
     public ResponseEntity<UsuarioResponseDTO> autenticar(
-            @RequestParam String email,
-            @RequestParam String senha
+            @Valid @RequestBody LoginDTO loginDTO
     ) {
-        Optional<UsuarioResponseDTO> usuario = usuarioService.autenticar(email, senha);
+        Optional<UsuarioResponseDTO> usuario = usuarioService.autenticar(
+                loginDTO.getEmail(),
+                loginDTO.getSenha()
+        );
 
         if (usuario.isPresent()) {
             return ResponseEntity.ok(usuario.get());

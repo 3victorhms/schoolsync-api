@@ -9,12 +9,14 @@ import org.springframework.web.bind.annotation.*;
 import br.cefetmg.schoolsync_api.dto.atividade.AtividadeRequestDTO;
 import br.cefetmg.schoolsync_api.dto.atividade.AtividadeResponseDTO;
 import br.cefetmg.schoolsync_api.service.AtividadeService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/atividades")
 @CrossOrigin(origins = "http://localhost:8100")
+@Tag(name = "Atividade")
 @RequiredArgsConstructor
 public class AtividadeController {
 
