@@ -32,6 +32,7 @@ public class GrupoService {
     private final SalaRepository salaRepository;
     private final UsuarioRepository usuarioRepository;
     private final MembrosRepository membrosRepository;
+    private final NotificacaoService notificacaoService;
 
     @Transactional
     public GrupoResponseDTO criar(GrupoRequestDTO dto) {
@@ -83,6 +84,16 @@ public class GrupoService {
         grupo.getMembros().add(membro);
 
         Grupo grupoSalvo = grupoRepository.save(grupo);
+
+        if (!grupo.getCriador().getId().equals(usuario.getId())) {
+            notificacaoService.criarParaUsuario(
+                    grupo.getCriador().getId(),
+                    "GRUPO",
+                    "Novo membro no grupo",
+                    usuario.getNome() + " entrou no grupo " + grupo.getNome(),
+                    grupo.getId()
+            );
+        }
 
         return new GrupoResponseDTO(grupoSalvo, usuario.getId());
     }

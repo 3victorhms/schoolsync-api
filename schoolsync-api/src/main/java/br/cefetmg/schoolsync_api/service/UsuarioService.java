@@ -1,6 +1,7 @@
 package br.cefetmg.schoolsync_api.service;
 
 import br.cefetmg.schoolsync_api.security.SenhaEncoder;
+import br.cefetmg.schoolsync_api.security.JwtService;
 import br.cefetmg.schoolsync_api.entity.Usuario;
 import br.cefetmg.schoolsync_api.dto.usuario.*;
 import br.cefetmg.schoolsync_api.repository.UsuarioRepository;
@@ -19,12 +20,14 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final SenhaEncoder senhaEncoder;
+    private final JwtService jwtService;
 
     private final Logger log = LoggerFactory.getLogger(UsuarioService.class);
 
-    public UsuarioService(UsuarioRepository usuarioRepository, SenhaEncoder senhaEncoder) {
+    public UsuarioService(UsuarioRepository usuarioRepository, SenhaEncoder senhaEncoder, JwtService jwtService) {
         this.usuarioRepository = usuarioRepository;
         this.senhaEncoder = senhaEncoder;
+        this.jwtService = jwtService;
     }
 
     public Optional<UsuarioResponseDTO> findOne(String id) {
@@ -109,7 +112,7 @@ public class UsuarioService {
         return new UsuarioResponseDTO(usuario);
     }
 
-    public Optional<UsuarioResponseDTO> autenticar(String email, String senha) {
+    public Optional<LoginResponseDTO> autenticar(String email, String senha) {
         log.debug("Request to autenticar Usuario : {}", email);
 
         Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
@@ -117,11 +120,19 @@ public class UsuarioService {
         if (usuarioOpt.isPresent()) {
             if (senhaEncoder.verificar(senha, usuarioOpt.get().getSenha())) {
                 Usuario usuario = usuarioOpt.get();
-                return Optional.of(new UsuarioResponseDTO(usuario));
+                return Optional.of(new LoginResponseDTO(
+                        jwtService.gerarToken(usuario),
+                        new UsuarioResponseDTO(usuario)
+                ));
             }
             return Optional.empty();
         } else {
             return Optional.empty();
         }
+    }
+
+    public boolean verificarLogin(String email) {
+        log.debug("Request to verificarLogin : {}", email);
+        return usuarioRepository.existsByEmail(email);
     }
 }

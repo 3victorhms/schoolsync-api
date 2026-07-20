@@ -10,5 +10,6 @@ import br.cefetmg.schoolsync_api.entity.Membros;
 public interface MembrosRepository extends JpaRepository<Membros, String> {
     boolean existsBySala_IdAndUsuario_Id(String idSala, String idUsuario);
     List<Membros> findByUsuario_Id(String idUsuario);
+    List<Membros> findBySala_Id(String idSala);
     Optional<Membros> findBySala_IdAndUsuario_Id(String idSala, String idUsuario);
 }

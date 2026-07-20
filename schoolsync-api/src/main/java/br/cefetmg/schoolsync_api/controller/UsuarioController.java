@@ -1,6 +1,7 @@
 package br.cefetmg.schoolsync_api.controller;
 
 import br.cefetmg.schoolsync_api.dto.usuario.LoginDTO;
+import br.cefetmg.schoolsync_api.dto.usuario.LoginResponseDTO;
 import br.cefetmg.schoolsync_api.dto.usuario.UsuarioRequestDTO;
 import br.cefetmg.schoolsync_api.dto.usuario.UsuarioResponseDTO;
 import br.cefetmg.schoolsync_api.service.UsuarioService;
@@ -52,18 +53,23 @@ public class UsuarioController {
     }
 
     @PostMapping("/autenticar")
-    public ResponseEntity<UsuarioResponseDTO> autenticar(
+    public ResponseEntity<LoginResponseDTO> autenticar(
             @Valid @RequestBody LoginDTO loginDTO
     ) {
-        Optional<UsuarioResponseDTO> usuario = usuarioService.autenticar(
+        Optional<LoginResponseDTO> login = usuarioService.autenticar(
                 loginDTO.getEmail(),
                 loginDTO.getSenha()
         );
 
-        if (usuario.isPresent()) {
-            return ResponseEntity.ok(usuario.get());
+        if (login.isPresent()) {
+            return ResponseEntity.ok(login.get());
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    @GetMapping("/verificar-login")
+    public ResponseEntity<Boolean> verificarLogin(@RequestParam String email) {
+        return ResponseEntity.ok(usuarioService.verificarLogin(email));
     }
 
     @PutMapping("/{id}")

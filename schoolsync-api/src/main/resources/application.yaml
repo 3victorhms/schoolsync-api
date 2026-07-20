@@ -15,3 +15,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+jwt:
+  secret: ${JWT_SECRET:schoolsync-dev-secret-key-change-me-with-at-least-32-chars}
+  expiration-ms: ${JWT_EXPIRATION_MS:86400000}

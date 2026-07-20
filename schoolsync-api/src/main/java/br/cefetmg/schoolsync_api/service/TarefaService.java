@@ -28,6 +28,7 @@ public class TarefaService {
     private final AtividadeRepository atividadeRepository;
     private final UsuarioRepository usuarioRepository;
     private final GrupoService grupoService;
+    private final NotificacaoService notificacaoService;
 
     @Transactional
     public TarefaResponseDTO criar(String idGrupo, TarefaRequestDTO dto) {
@@ -57,7 +58,19 @@ public class TarefaService {
         tarefa.setCriadaPor(usuarioLogado);
         tarefa.setAtribuidoPara(usuarioAtribuido);
 
-        return new TarefaResponseDTO(tarefaRepository.save(tarefa));
+        Tarefa tarefaSalva = tarefaRepository.save(tarefa);
+
+        if (!usuarioAtribuido.getId().equals(usuarioLogado.getId())) {
+            notificacaoService.criarParaUsuario(
+                    usuarioAtribuido.getId(),
+                    "TAREFA",
+                    "Nova tarefa atribuida",
+                    usuarioLogado.getNome() + " atribuiu uma tarefa para voce: " + tarefaSalva.getTitulo(),
+                    tarefaSalva.getId()
+            );
+        }
+
+        return new TarefaResponseDTO(tarefaSalva);
     }
 
     @Transactional(readOnly = true)

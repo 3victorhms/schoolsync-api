@@ -26,6 +26,7 @@ public class ComentarioService {
     private final ComentarioRepository comentarioRepository;
     private final AtividadeRepository atividadeRepository;
     private final UsuarioRepository usuarioRepository;
+    private final NotificacaoService notificacaoService;
 
     @Transactional
     public ComentarioResponseDTO criar(String idAtividade, ComentarioRequestDTO dto) {
@@ -52,7 +53,38 @@ public class ComentarioService {
             comentario.setComentarioPai(comentarioPai);
         }
 
-        return new ComentarioResponseDTO(comentarioRepository.save(comentario));
+        Comentario comentarioSalvo = comentarioRepository.save(comentario);
+        notificarComentario(comentarioSalvo);
+
+        return new ComentarioResponseDTO(comentarioSalvo);
+    }
+
+    private void notificarComentario(Comentario comentario) {
+        String idAutor = comentario.getUsuario().getId();
+        String idDonoAtividade = comentario.getAtividade().getCriadaPor().getId();
+
+        if (!idDonoAtividade.equals(idAutor)) {
+            notificacaoService.criarParaUsuario(
+                    idDonoAtividade,
+                    "ATIVIDADE",
+                    "Novo comentario",
+                    comentario.getUsuario().getNome() + " comentou na atividade " + comentario.getAtividade().getTitulo(),
+                    comentario.getAtividade().getId()
+            );
+        }
+
+        if (comentario.getComentarioPai() != null) {
+            String idAutorComentarioPai = comentario.getComentarioPai().getUsuario().getId();
+            if (!idAutorComentarioPai.equals(idAutor) && !idAutorComentarioPai.equals(idDonoAtividade)) {
+                notificacaoService.criarParaUsuario(
+                        idAutorComentarioPai,
+                        "ATIVIDADE",
+                        "Nova resposta",
+                        comentario.getUsuario().getNome() + " respondeu seu comentario",
+                        comentario.getAtividade().getId()
+                );
+            }
+        }
     }
 
     @Transactional(readOnly = true)

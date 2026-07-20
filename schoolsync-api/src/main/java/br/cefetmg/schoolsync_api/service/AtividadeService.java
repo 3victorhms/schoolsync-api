@@ -12,10 +12,12 @@ import br.cefetmg.schoolsync_api.dto.atividade.AtividadeRequestDTO;
 import br.cefetmg.schoolsync_api.dto.atividade.AtividadeResponseDTO;
 import br.cefetmg.schoolsync_api.entity.Atividade;
 import br.cefetmg.schoolsync_api.entity.Caderno;
+import br.cefetmg.schoolsync_api.entity.Membros;
 import br.cefetmg.schoolsync_api.entity.Sala;
 import br.cefetmg.schoolsync_api.entity.Usuario;
 import br.cefetmg.schoolsync_api.repository.AtividadeRepository;
 import br.cefetmg.schoolsync_api.repository.CadernoRepository;
+import br.cefetmg.schoolsync_api.repository.MembrosRepository;
 import br.cefetmg.schoolsync_api.repository.SalaRepository;
 import br.cefetmg.schoolsync_api.repository.UsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -29,6 +31,8 @@ public class AtividadeService {
     private final SalaRepository salaRepository;
     private final UsuarioRepository usuarioRepository;
     private final CadernoRepository cadernoRepository;
+    private final MembrosRepository membrosRepository;
+    private final NotificacaoService notificacaoService;
 
     @Transactional
     public AtividadeResponseDTO criar(AtividadeRequestDTO dto) {
@@ -57,7 +61,26 @@ public class AtividadeService {
 
         cadernoRepository.save(caderno);
 
+        notificarNovaAtividade(atividadeSalva, criador);
+
         return new AtividadeResponseDTO(atividadeSalva, caderno.getStatus());
+    }
+
+    private void notificarNovaAtividade(Atividade atividade, Usuario criador) {
+        List<Membros> membros = membrosRepository.findBySala_Id(atividade.getSala().getId());
+
+        for (Membros membro : membros) {
+            Usuario usuario = membro.getUsuario();
+            if (!usuario.getId().equals(criador.getId())) {
+                notificacaoService.criarParaUsuario(
+                        usuario.getId(),
+                        "ATIVIDADE",
+                        "Nova atividade",
+                        criador.getNome() + " criou a atividade " + atividade.getTitulo(),
+                        atividade.getId()
+                );
+            }
+        }
     }
 
     @Transactional
