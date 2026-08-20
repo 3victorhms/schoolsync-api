@@ -106,6 +106,20 @@ public class NotificacaoService {
             return null;
         }
 
+        if (targetId != null) {
+            Notificacao pendente = notificacaoRepository
+                    .findFirstByUsuario_IdAndTipoAndTargetIdAndLidoFalseOrderByHorarioDesc(idUsuario, tipo, targetId)
+                    .orElse(null);
+            if (pendente != null) {
+                pendente.setTitulo(titulo);
+                pendente.setMensagem(mensagem);
+                pendente.setHorario(LocalDateTime.now());
+                NotificacaoResponseDTO response = new NotificacaoResponseDTO(notificacaoRepository.save(pendente));
+                enviar(idUsuario, response);
+                return response;
+            }
+        }
+
         Notificacao notificacao = new Notificacao();
         notificacao.setUsuario(configuracao.getUsuario());
         notificacao.setTipo(tipo);
@@ -119,6 +133,13 @@ public class NotificacaoService {
         enviar(idUsuario, response);
 
         return response;
+    }
+
+    @Transactional
+    public void removerPorAlvo(String targetId) {
+        if (targetId != null) {
+            notificacaoRepository.deleteByTargetId(targetId);
+        }
     }
 
     private NotificacaoConfiguracao buscarOuCriarConfiguracao(String idUsuario) {

@@ -34,4 +34,7 @@ public class Usuario {
 
     @Column(length = 500)
     private String foto;
+
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private boolean ativo = true;
 }

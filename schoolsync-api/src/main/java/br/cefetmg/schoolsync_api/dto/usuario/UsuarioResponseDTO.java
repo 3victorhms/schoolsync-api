@@ -16,11 +16,13 @@ public class UsuarioResponseDTO {
     private String nome;
     private String email;
     private String foto;
+    private boolean ativo;
 
     public UsuarioResponseDTO(Usuario usuario) {
         this.id = usuario.getId();
         this.nome = usuario.getNome();
         this.email = usuario.getEmail();
         this.foto = usuario.getFoto();
+        this.ativo = usuario.isAtivo();
     }
 }
