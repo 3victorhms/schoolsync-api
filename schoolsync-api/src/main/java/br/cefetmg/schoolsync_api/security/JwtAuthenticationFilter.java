@@ -44,6 +44,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private void autenticar(Usuario usuario) {
+        if (!usuario.isAtivo()) {
+            return;
+        }
+
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                 usuario,
                 null,

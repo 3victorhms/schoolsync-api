@@ -14,4 +14,6 @@ public interface GrupoRepository extends JpaRepository<Grupo, String> {
     boolean existsByCodigoConvite(String codigoConvite);
 
     List<Grupo> findBySala_IdAndMembros_Usuario_Id(String idSala, String idUsuario);
+
+    boolean existsByCriador_Id(String idUsuario);
 }

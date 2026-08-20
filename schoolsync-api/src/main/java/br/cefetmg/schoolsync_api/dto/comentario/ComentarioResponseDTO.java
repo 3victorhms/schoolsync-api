@@ -26,8 +26,12 @@ public class ComentarioResponseDTO {
         this.dataCriacao = comentario.getDataCriacao();
         this.idAtividade = comentario.getAtividade().getId();
         this.idUsuario = comentario.getUsuario().getId();
-        this.nomeUsuario = comentario.getUsuario().getNome();
-        this.fotoUsuario = comentario.getUsuario().getFoto();
+        this.nomeUsuario = comentario.getUsuario().isAtivo()
+                ? comentario.getUsuario().getNome()
+                : "Usuário inativo";
+        this.fotoUsuario = comentario.getUsuario().isAtivo()
+                ? comentario.getUsuario().getFoto()
+                : null;
         this.idComentarioPai = comentario.getComentarioPai() == null
                 ? null
                 : comentario.getComentarioPai().getId();

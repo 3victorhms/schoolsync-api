@@ -21,6 +21,8 @@ import br.cefetmg.schoolsync_api.repository.MembrosRepository;
 import br.cefetmg.schoolsync_api.repository.SalaRepository;
 import br.cefetmg.schoolsync_api.repository.UsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -36,16 +38,18 @@ public class AtividadeService {
 
     @Transactional
     public AtividadeResponseDTO criar(AtividadeRequestDTO dto) {
-        Sala sala = salaRepository.findById(dto.getIdSala())
+        Sala sala = salaRepository.findByIdForUpdate(dto.getIdSala())
                 .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
 
         Usuario criador = usuarioRepository.findById(dto.getIdCriador())
                 .orElseThrow(() -> new EntityNotFoundException("Usuario nao encontrado"));
 
+        validarPontuacao(sala.getId(), dto.getDisciplina(), dto.getValor(), null);
+
         Atividade atividade = new Atividade();
         atividade.setTitulo(dto.getTitulo());
         atividade.setDescricao(dto.getDescricao());
-        atividade.setDisciplina(dto.getDisciplina());
+        atividade.setDisciplina(dto.getDisciplina().trim());
         atividade.setDataEntrega(dto.getDataEntrega());
         atividade.setValor(dto.getValor());
         atividade.setSala(sala);
@@ -71,7 +75,7 @@ public class AtividadeService {
 
         for (Membros membro : membros) {
             Usuario usuario = membro.getUsuario();
-            if (!usuario.getId().equals(criador.getId())) {
+            if (!usuario.getId().equals(criador.getId()) && usuario.isAtivo()) {
                 notificacaoService.criarParaUsuario(
                         usuario.getId(),
                         "ATIVIDADE",
@@ -88,15 +92,59 @@ public class AtividadeService {
         Atividade atividade = atividadeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Atividade nao encontrada"));
 
+        Sala sala = salaRepository.findByIdForUpdate(atividade.getSala().getId())
+                .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
+        validarPontuacao(sala.getId(), dto.getDisciplina(), dto.getValor(), id);
+
         atividade.setTitulo(dto.getTitulo());
         atividade.setDescricao(dto.getDescricao());
-        atividade.setDisciplina(dto.getDisciplina());
+        atividade.setDisciplina(dto.getDisciplina().trim());
         atividade.setDataEntrega(dto.getDataEntrega());
         atividade.setValor(dto.getValor());
 
         Atividade atividadeAtualizada = atividadeRepository.save(atividade);
 
+        notificarAtividadeAtualizada(atividadeAtualizada);
+
         return new AtividadeResponseDTO(atividadeAtualizada);
+    }
+
+    private void validarPontuacao(String idSala, String disciplina, Double novoValor, String idIgnorado) {
+        if (novoValor == null || novoValor <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O valor da atividade deve ser maior que zero");
+        }
+
+        String disciplinaNormalizada = disciplina == null ? "" : disciplina.trim();
+        if (disciplinaNormalizada.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A disciplina é obrigatória");
+        }
+
+        double utilizado = atividadeRepository.findBySala_IdAndDisciplinaIgnoreCase(idSala, disciplinaNormalizada).stream()
+                .filter(atividade -> idIgnorado == null || !atividade.getId().equals(idIgnorado))
+                .mapToDouble(Atividade::getValor)
+                .sum();
+        double disponivel = Math.max(0, 100 - utilizado);
+
+        if (utilizado + novoValor > 100 + 0.000001d) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                    String.format("Pontuação máxima de 100 pontos excedida para %s. Já utilizados: %.2f; disponíveis: %.2f; valor informado: %.2f.",
+                            disciplinaNormalizada, utilizado, disponivel, novoValor));
+        }
+    }
+
+    private void notificarAtividadeAtualizada(Atividade atividade) {
+        List<Membros> membros = membrosRepository.findBySala_Id(atividade.getSala().getId());
+        for (Membros membro : membros) {
+            Usuario usuario = membro.getUsuario();
+            if (!usuario.getId().equals(atividade.getCriadaPor().getId()) && usuario.isAtivo()) {
+                notificacaoService.criarParaUsuario(
+                        usuario.getId(),
+                        "ATIVIDADE",
+                        "Atividade atualizada",
+                        atividade.getTitulo() + " foi atualizada. Novo prazo: " + atividade.getDataEntrega(),
+                        atividade.getId());
+            }
+        }
     }
 
     public AtividadeResponseDTO buscarPorId(String idAtividade, String idUsuarioLogado) {
@@ -130,6 +178,7 @@ public class AtividadeService {
         Atividade atividade = atividadeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Atividade nao encontrada"));
 
+        notificacaoService.removerPorAlvo(id);
         atividadeRepository.delete(atividade);
     }
 
@@ -138,7 +187,9 @@ public class AtividadeService {
         Sala sala = salaRepository.findById(idSala)
                 .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
 
-        atividadeRepository.deleteAll(new ArrayList<>(sala.getAtividades()));
+        List<Atividade> atividades = new ArrayList<>(sala.getAtividades());
+        atividades.forEach(atividade -> notificacaoService.removerPorAlvo(atividade.getId()));
+        atividadeRepository.deleteAll(atividades);
         sala.getAtividades().clear();
     }
 

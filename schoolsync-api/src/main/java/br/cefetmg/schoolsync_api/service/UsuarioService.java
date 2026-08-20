@@ -10,6 +10,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.Authentication;
+import org.springframework.transaction.annotation.Transactional;
+
+import br.cefetmg.schoolsync_api.repository.SalaRepository;
+import br.cefetmg.schoolsync_api.repository.GrupoRepository;
+import br.cefetmg.schoolsync_api.repository.TarefaRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,13 +28,20 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final SenhaEncoder senhaEncoder;
     private final JwtService jwtService;
+    private final SalaRepository salaRepository;
+    private final GrupoRepository grupoRepository;
+    private final TarefaRepository tarefaRepository;
 
     private final Logger log = LoggerFactory.getLogger(UsuarioService.class);
 
-    public UsuarioService(UsuarioRepository usuarioRepository, SenhaEncoder senhaEncoder, JwtService jwtService) {
+    public UsuarioService(UsuarioRepository usuarioRepository, SenhaEncoder senhaEncoder, JwtService jwtService,
+            SalaRepository salaRepository, GrupoRepository grupoRepository, TarefaRepository tarefaRepository) {
         this.usuarioRepository = usuarioRepository;
         this.senhaEncoder = senhaEncoder;
         this.jwtService = jwtService;
+        this.salaRepository = salaRepository;
+        this.grupoRepository = grupoRepository;
+        this.tarefaRepository = tarefaRepository;
     }
 
     public Optional<UsuarioResponseDTO> findOne(String id) {
@@ -56,9 +70,36 @@ public class UsuarioService {
         return resposta;
     }
 
+    @Transactional
     public void delete(String id) {
         log.debug("Request to delete Usuario : {}", id);
-        usuarioRepository.deleteById(id);
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication == null ? null : authentication.getPrincipal();
+        if (!(principal instanceof Usuario solicitante) || !solicitante.getId().equals(id)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você só pode inativar a própria conta");
+        }
+
+        List<String> vinculos = new ArrayList<>();
+        if (salaRepository.existsByLider_Id(id)) vinculos.add("liderança de sala");
+        if (grupoRepository.existsByCriador_Id(id)) vinculos.add("liderança de grupo");
+        if (!tarefaRepository.findByAtribuidoPara_IdOrderByDataCriacaoAsc(id).isEmpty()) {
+            vinculos.add("atividades/tarefas atribuídas");
+        }
+
+        if (!vinculos.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Não foi possível inativar o usuário: resolva " + String.join(", ", vinculos)
+                            + ". Transfira as lideranças e reatribua as atividades antes de tentar novamente.");
+        }
+
+        // Preserva comentários, histórico e integridade referencial para auditoria.
+        usuario.setAtivo(false);
+        usuario.setNome("Usuário inativo");
+        usuario.setFoto(null);
+        usuarioRepository.save(usuario);
     }
 
     public UsuarioResponseDTO save(UsuarioRequestDTO dto) {
@@ -93,6 +134,10 @@ public class UsuarioService {
 
         Usuario usuario = usuarioOpt.get();
 
+        if (!usuario.isAtivo()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Usuário inativo não pode ser alterado");
+        }
+
         Optional<Usuario> usuarioComMesmoEmail = usuarioRepository.findByEmail(dto.getEmail());
         if (usuarioComMesmoEmail.isPresent() && !usuarioComMesmoEmail.get().getId().equals(id)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email já cadastrado");
@@ -118,8 +163,11 @@ public class UsuarioService {
         Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
 
         if (usuarioOpt.isPresent()) {
-            if (senhaEncoder.verificar(senha, usuarioOpt.get().getSenha())) {
-                Usuario usuario = usuarioOpt.get();
+            Usuario usuario = usuarioOpt.get();
+            if (!usuario.isAtivo()) {
+                return Optional.empty();
+            }
+            if (senhaEncoder.verificar(senha, usuario.getSenha())) {
                 return Optional.of(new LoginResponseDTO(
                         jwtService.gerarToken(usuario),
                         new UsuarioResponseDTO(usuario)
