@@ -19,3 +19,8 @@ spring:
 jwt:
   secret: ${JWT_SECRET:schoolsync-dev-secret-key-change-me-with-at-least-32-chars}
   expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+
+firebase:
+  enabled: ${FIREBASE_ENABLED:false}
+  project-id: ${FIREBASE_PROJECT_ID:}
+  credentials-base64: ${FIREBASE_CREDENTIALS_BASE64:}

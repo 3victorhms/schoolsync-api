@@ -1,7 +1,9 @@
 package br.cefetmg.schoolsync_api.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
@@ -27,6 +29,7 @@ class NotificacaoServiceTest {
     @Mock private NotificacaoRepository notificacaoRepository;
     @Mock private NotificacaoConfiguracaoRepository configuracaoRepository;
     @Mock private UsuarioRepository usuarioRepository;
+    @Mock private NotificacaoPushService notificacaoPushService;
     @InjectMocks private NotificacaoService notificacaoService;
 
     @Test
@@ -60,5 +63,26 @@ class NotificacaoServiceTest {
         assertEquals("Novo prazo", existente.getMensagem());
         assertEquals(existente.getId(), resposta.getId());
         verify(notificacaoRepository).save(existente);
+    }
+
+    @Test
+    void enviaPushMesmoQuandoPainelDoAplicativoEstaDesativado() {
+        Usuario usuario = new Usuario();
+        usuario.setId("usuario-1");
+
+        NotificacaoConfiguracao configuracao = new NotificacaoConfiguracao();
+        configuracao.setUsuario(usuario);
+        configuracao.setNoAplicativo(false);
+        configuracao.setPush(true);
+
+        when(configuracaoRepository.findByUsuario_Id(usuario.getId())).thenReturn(Optional.of(configuracao));
+
+        NotificacaoResponseDTO resposta = notificacaoService.criarParaUsuario(
+                usuario.getId(), "ATIVIDADE", "Nova atividade", "Confira o prazo", "atividade-1");
+
+        assertNull(resposta);
+        verify(notificacaoPushService).enviar(
+                usuario.getId(), "ATIVIDADE", "Nova atividade", "Confira o prazo", "atividade-1");
+        verifyNoInteractions(notificacaoRepository);
     }
 }

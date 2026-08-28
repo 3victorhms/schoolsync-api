@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import br.cefetmg.schoolsync_api.repository.SalaRepository;
 import br.cefetmg.schoolsync_api.repository.GrupoRepository;
 import br.cefetmg.schoolsync_api.repository.TarefaRepository;
+import br.cefetmg.schoolsync_api.repository.DispositivoPushRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,17 +32,20 @@ public class UsuarioService {
     private final SalaRepository salaRepository;
     private final GrupoRepository grupoRepository;
     private final TarefaRepository tarefaRepository;
+    private final DispositivoPushRepository dispositivoPushRepository;
 
     private final Logger log = LoggerFactory.getLogger(UsuarioService.class);
 
     public UsuarioService(UsuarioRepository usuarioRepository, SenhaEncoder senhaEncoder, JwtService jwtService,
-            SalaRepository salaRepository, GrupoRepository grupoRepository, TarefaRepository tarefaRepository) {
+            SalaRepository salaRepository, GrupoRepository grupoRepository, TarefaRepository tarefaRepository,
+            DispositivoPushRepository dispositivoPushRepository) {
         this.usuarioRepository = usuarioRepository;
         this.senhaEncoder = senhaEncoder;
         this.jwtService = jwtService;
         this.salaRepository = salaRepository;
         this.grupoRepository = grupoRepository;
         this.tarefaRepository = tarefaRepository;
+        this.dispositivoPushRepository = dispositivoPushRepository;
     }
 
     public Optional<UsuarioResponseDTO> findOne(String id) {
@@ -99,6 +103,7 @@ public class UsuarioService {
         usuario.setAtivo(false);
         usuario.setNome("Usuário inativo");
         usuario.setFoto(null);
+        dispositivoPushRepository.deleteAllByUsuario_Id(id);
         usuarioRepository.save(usuario);
     }
 

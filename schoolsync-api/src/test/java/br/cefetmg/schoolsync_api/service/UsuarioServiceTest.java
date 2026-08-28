@@ -27,6 +27,7 @@ import br.cefetmg.schoolsync_api.repository.GrupoRepository;
 import br.cefetmg.schoolsync_api.repository.SalaRepository;
 import br.cefetmg.schoolsync_api.repository.TarefaRepository;
 import br.cefetmg.schoolsync_api.repository.UsuarioRepository;
+import br.cefetmg.schoolsync_api.repository.DispositivoPushRepository;
 import br.cefetmg.schoolsync_api.security.JwtService;
 import br.cefetmg.schoolsync_api.security.SenhaEncoder;
 
@@ -39,6 +40,7 @@ class UsuarioServiceTest {
     @Mock private SalaRepository salaRepository;
     @Mock private GrupoRepository grupoRepository;
     @Mock private TarefaRepository tarefaRepository;
+    @Mock private DispositivoPushRepository dispositivoPushRepository;
     @InjectMocks private UsuarioService usuarioService;
 
     @AfterEach
@@ -79,6 +81,7 @@ class UsuarioServiceTest {
         assertFalse(usuario.isAtivo());
         assertEquals("Usuário inativo", usuario.getNome());
         verify(usuarioRepository).save(usuario);
+        verify(dispositivoPushRepository).deleteAllByUsuario_Id(usuario.getId());
         verify(usuarioRepository, never()).delete(usuario);
     }
 
