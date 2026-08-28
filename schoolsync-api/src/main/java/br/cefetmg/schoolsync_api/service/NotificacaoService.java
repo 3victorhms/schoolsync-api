@@ -32,6 +32,7 @@ public class NotificacaoService {
     private final NotificacaoRepository notificacaoRepository;
     private final NotificacaoConfiguracaoRepository configuracaoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final NotificacaoPushService notificacaoPushService;
     private final Map<String, List<SseEmitter>> emittersPorUsuario = new ConcurrentHashMap<>();
 
     @Transactional(readOnly = true)
@@ -102,11 +103,12 @@ public class NotificacaoService {
     ) {
         NotificacaoConfiguracao configuracao = buscarOuCriarConfiguracao(idUsuario);
 
-        if (!configuracao.isNoAplicativo()) {
+        if (!configuracao.isNoAplicativo() && !configuracao.isPush()) {
             return null;
         }
 
-        if (targetId != null) {
+        NotificacaoResponseDTO response = null;
+        if (configuracao.isNoAplicativo() && targetId != null) {
             Notificacao pendente = notificacaoRepository
                     .findFirstByUsuario_IdAndTipoAndTargetIdAndLidoFalseOrderByHorarioDesc(idUsuario, tipo, targetId)
                     .orElse(null);
@@ -114,23 +116,28 @@ public class NotificacaoService {
                 pendente.setTitulo(titulo);
                 pendente.setMensagem(mensagem);
                 pendente.setHorario(LocalDateTime.now());
-                NotificacaoResponseDTO response = new NotificacaoResponseDTO(notificacaoRepository.save(pendente));
+                response = new NotificacaoResponseDTO(notificacaoRepository.save(pendente));
                 enviar(idUsuario, response);
-                return response;
             }
         }
 
-        Notificacao notificacao = new Notificacao();
-        notificacao.setUsuario(configuracao.getUsuario());
-        notificacao.setTipo(tipo);
-        notificacao.setTitulo(titulo);
-        notificacao.setMensagem(mensagem);
-        notificacao.setTargetId(targetId);
-        notificacao.setHorario(LocalDateTime.now());
-        notificacao.setLido(false);
+        if (configuracao.isNoAplicativo() && response == null) {
+            Notificacao notificacao = new Notificacao();
+            notificacao.setUsuario(configuracao.getUsuario());
+            notificacao.setTipo(tipo);
+            notificacao.setTitulo(titulo);
+            notificacao.setMensagem(mensagem);
+            notificacao.setTargetId(targetId);
+            notificacao.setHorario(LocalDateTime.now());
+            notificacao.setLido(false);
 
-        NotificacaoResponseDTO response = new NotificacaoResponseDTO(notificacaoRepository.save(notificacao));
-        enviar(idUsuario, response);
+            response = new NotificacaoResponseDTO(notificacaoRepository.save(notificacao));
+            enviar(idUsuario, response);
+        }
+
+        if (configuracao.isPush()) {
+            notificacaoPushService.enviar(idUsuario, tipo, titulo, mensagem, targetId);
+        }
 
         return response;
     }
