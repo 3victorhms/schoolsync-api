@@ -18,12 +18,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+// classe pra armazenar os tokens dos dispostivos para enviar as notificações
 @Entity
-@Table(
-        name = "tb_dispositivo_push",
-        uniqueConstraints = @UniqueConstraint(name = "uk_dispositivo_push_token", columnNames = "token"),
-        indexes = @Index(name = "idx_dispositivo_push_usuario", columnList = "usuario_id")
-)
+@Table(name = "tb_dispositivo_push", uniqueConstraints = @UniqueConstraint(name = "uk_dispositivo_push_token", columnNames = "token"), indexes = @Index(name = "idx_dispositivo_push_usuario", columnList = "usuario_id"))
 @Getter
 @Setter
 @NoArgsConstructor

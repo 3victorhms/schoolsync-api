@@ -47,6 +47,7 @@ public class Grupo {
     private Usuario criador;
 
     @OneToMany(mappedBy = "grupo", cascade = CascadeType.ALL, orphanRemoval = true)
+    // ordena pela data de entrada da mais antiga para mais recente automaticamente
     @OrderBy("dataEntrada ASC")
     private List<GrupoMembro> membros = new ArrayList<>();
 
