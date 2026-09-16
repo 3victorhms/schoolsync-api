@@ -27,5 +27,6 @@ public class UsuarioRequestDTO {
     @Size(min = 6, message = "A senha deve ter no mínimo 6 caracteres")
     private String senha;
 
+    @Size(max = 750000, message = "A foto de perfil é muito grande")
     private String foto;
 }

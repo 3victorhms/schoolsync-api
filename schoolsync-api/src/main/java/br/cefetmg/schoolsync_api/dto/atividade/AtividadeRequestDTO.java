@@ -3,6 +3,8 @@ package br.cefetmg.schoolsync_api.dto.atividade;
 import java.time.LocalDate;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,6 +25,8 @@ public class AtividadeRequestDTO {
     private LocalDate dataEntrega;
 
     @NotNull
+    @DecimalMin(value = "0.01", message = "O valor deve ser maior que zero")
+    @DecimalMax(value = "15.0", message = "O valor máximo de uma atividade é 15 pontos")
     private Double valor;
 
     @NotBlank
