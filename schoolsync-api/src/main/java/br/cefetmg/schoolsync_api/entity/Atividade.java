@@ -57,6 +57,9 @@ public class Atividade {
     @JoinColumn(name = "criada_por", nullable = false)
     private Usuario criadaPor;
 
+    // o principal motivo da escolha do uso de HashSet ao invès de ArrayList é que o
+    // HashSet não aceita itens duplicados, além de ser mais otimizado para
+    // conjuntos em que a ordem não importa
     @OneToMany(mappedBy = "atividade", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Caderno> noCaderno = new HashSet<>();
 

@@ -43,6 +43,7 @@ public class Notificacao {
     @Column(nullable = false)
     private LocalDateTime horario;
 
+    // id pra redirecionar a notificação (ex: prazo de atividade chegando ao fim)
     @Column(name = "target_id", length = 36)
     private String targetId;
 
