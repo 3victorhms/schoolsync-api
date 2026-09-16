@@ -27,6 +27,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SalaService {
 
+    private static final int MAXIMO_MEMBROS_POR_SALA = 50;
+
     private final SalaRepository salaRepository;
     private final UsuarioRepository usuarioRepository;
     private final MembrosRepository membrosRepository;
@@ -64,8 +66,9 @@ public class SalaService {
         return new SalaResponseDTO(salaAtualizada, Map.of());
     }
 
+    @Transactional
     public SalaResponseDTO entrar(String codigoConvite, String idUsuario) {
-        Sala sala = salaRepository.findByCodigoConvite(codigoConvite)
+        Sala sala = salaRepository.findByCodigoConviteForUpdate(codigoConvite)
                 .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
 
         Usuario usuario = usuarioRepository.findById(idUsuario)
@@ -78,6 +81,10 @@ public class SalaService {
 
         if (jaMembro) {
             throw new IllegalArgumentException("Voce ja esta nesta sala");
+        }
+
+        if (sala.getMembros().size() >= MAXIMO_MEMBROS_POR_SALA) {
+            throw new IllegalArgumentException("Esta sala já atingiu o limite de 50 alunos");
         }
 
         Membros novoMembro = new Membros();

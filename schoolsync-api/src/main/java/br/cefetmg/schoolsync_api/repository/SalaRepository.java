@@ -14,6 +14,10 @@ import java.util.Optional;
 public interface SalaRepository extends JpaRepository<Sala, String> {
     Optional<Sala> findByCodigoConvite(String codigoConvite);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select sala from Sala sala where sala.codigoConvite = :codigoConvite")
+    Optional<Sala> findByCodigoConviteForUpdate(@Param("codigoConvite") String codigoConvite);
+
     boolean existsByCodigoConvite(String codigoConvite);
 
     List<Sala> findByMembros_Usuario_Id(String idUsuario);

@@ -29,6 +29,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AtividadeService {
 
+    private static final double VALOR_MAXIMO_POR_ATIVIDADE = 15d;
+
     private final AtividadeRepository atividadeRepository;
     private final SalaRepository salaRepository;
     private final UsuarioRepository usuarioRepository;
@@ -112,6 +114,11 @@ public class AtividadeService {
     private void validarPontuacao(String idSala, String disciplina, Double novoValor, String idIgnorado) {
         if (novoValor == null || novoValor <= 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O valor da atividade deve ser maior que zero");
+        }
+
+        if (novoValor > VALOR_MAXIMO_POR_ATIVIDADE) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "O valor máximo de uma atividade é 15 pontos");
         }
 
         String disciplinaNormalizada = disciplina == null ? "" : disciplina.trim();
