@@ -35,6 +35,7 @@ public class Usuario {
     @Column(columnDefinition = "TEXT")
     private String foto;
 
+    // a conta é desativada e não excluída [RN]
     @Column(nullable = false, columnDefinition = "boolean default true")
     private boolean ativo = true;
 }
