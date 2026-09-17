@@ -16,5 +16,7 @@ public interface NotificacaoRepository extends JpaRepository<Notificacao, String
     Optional<Notificacao> findFirstByUsuario_IdAndTipoAndTargetIdAndLidoFalseOrderByHorarioDesc(
             String idUsuario, String tipo, String targetId);
 
+    boolean existsByUsuario_IdAndTipoAndTargetId(String idUsuario, String tipo, String targetId);
+
     void deleteByTargetId(String targetId);
 }
