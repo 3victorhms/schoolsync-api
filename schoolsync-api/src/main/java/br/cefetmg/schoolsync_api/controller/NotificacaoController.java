@@ -47,6 +47,12 @@ public class NotificacaoController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/push/teste")
+    public ResponseEntity<Void> testarPush() {
+        notificacaoPushService.testarEnvioParaUsuarioAutenticado();
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/usuario/{idUsuario}")
     public ResponseEntity<List<NotificacaoResponseDTO>> listarPorUsuario(@PathVariable String idUsuario) {
         return ResponseEntity.ok(notificacaoService.listarPorUsuario(idUsuario));
