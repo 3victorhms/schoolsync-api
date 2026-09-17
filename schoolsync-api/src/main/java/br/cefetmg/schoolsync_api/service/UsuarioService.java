@@ -86,8 +86,10 @@ public class UsuarioService {
         validarSolicitante(id, "inativar");
 
         List<String> vinculos = new ArrayList<>();
-        if (salaRepository.existsByLider_Id(id)) vinculos.add("liderança de sala");
-        if (grupoRepository.existsByCriador_Id(id)) vinculos.add("liderança de grupo");
+        if (salaRepository.existsByLider_Id(id))
+            vinculos.add("liderança de sala");
+        if (grupoRepository.existsByCriador_Id(id))
+            vinculos.add("liderança de grupo");
         if (!tarefaRepository.findByAtribuidoPara_IdOrderByDataCriacaoAsc(id).isEmpty()) {
             vinculos.add("atividades/tarefas atribuídas");
         }
@@ -152,7 +154,8 @@ public class UsuarioService {
         usuario.setNome(dto.getNome());
         usuario.setEmail(dto.getEmail());
 
-        // só atualiza a senha se vier um valor novo e não vazio; senão mantém a senha atual no banco
+        // só atualiza a senha se vier um valor novo e não vazio; senão mantém a senha
+        // atual no banco
         if (dto.getSenha() != null && !dto.getSenha().isBlank()) {
             usuario.setSenha(senhaEncoder.criptografar(dto.getSenha()));
         }
@@ -181,9 +184,17 @@ public class UsuarioService {
 
     private void validarSolicitante(String id, String acao) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        System.out.println("ID recebido: " + id);
+        System.out.println("Usuário autenticado: "
+                + (authentication == null ? null : authentication.getPrincipal()));
+
         Object principal = authentication == null ? null : authentication.getPrincipal();
-        if (!(principal instanceof Usuario solicitante) || !solicitante.getId().equals(id)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+
+        if (!(principal instanceof Usuario solicitante)
+                || !solicitante.getId().equals(id)) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
                     "Você só pode " + acao + " a própria conta");
         }
     }
@@ -201,8 +212,7 @@ public class UsuarioService {
             if (senhaEncoder.verificar(senha, usuario.getSenha())) {
                 return Optional.of(new LoginResponseDTO(
                         jwtService.gerarToken(usuario),
-                        new UsuarioResponseDTO(usuario)
-                ));
+                        new UsuarioResponseDTO(usuario)));
             }
             return Optional.empty();
         } else {
