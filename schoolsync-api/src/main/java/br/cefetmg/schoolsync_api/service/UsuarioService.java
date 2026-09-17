@@ -13,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import br.cefetmg.schoolsync_api.repository.SalaRepository;
 import br.cefetmg.schoolsync_api.repository.GrupoRepository;
@@ -33,12 +34,13 @@ public class UsuarioService {
     private final GrupoRepository grupoRepository;
     private final TarefaRepository tarefaRepository;
     private final DispositivoPushRepository dispositivoPushRepository;
+    private final CloudinaryService cloudinaryService;
 
     private final Logger log = LoggerFactory.getLogger(UsuarioService.class);
 
     public UsuarioService(UsuarioRepository usuarioRepository, SenhaEncoder senhaEncoder, JwtService jwtService,
             SalaRepository salaRepository, GrupoRepository grupoRepository, TarefaRepository tarefaRepository,
-            DispositivoPushRepository dispositivoPushRepository) {
+            DispositivoPushRepository dispositivoPushRepository, CloudinaryService cloudinaryService) {
         this.usuarioRepository = usuarioRepository;
         this.senhaEncoder = senhaEncoder;
         this.jwtService = jwtService;
@@ -46,6 +48,7 @@ public class UsuarioService {
         this.grupoRepository = grupoRepository;
         this.tarefaRepository = tarefaRepository;
         this.dispositivoPushRepository = dispositivoPushRepository;
+        this.cloudinaryService = cloudinaryService;
     }
 
     public Optional<UsuarioResponseDTO> findOne(String id) {
@@ -80,11 +83,7 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Object principal = authentication == null ? null : authentication.getPrincipal();
-        if (!(principal instanceof Usuario solicitante) || !solicitante.getId().equals(id)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você só pode inativar a própria conta");
-        }
+        validarSolicitante(id, "inativar");
 
         List<String> vinculos = new ArrayList<>();
         if (salaRepository.existsByLider_Id(id)) vinculos.add("liderança de sala");
@@ -131,6 +130,8 @@ public class UsuarioService {
     public UsuarioResponseDTO update(String id, UsuarioRequestDTO dto) {
         log.debug("Request to update Usuario : {}", id);
 
+        validarSolicitante(id, "alterar");
+
         Optional<Usuario> usuarioOpt = usuarioRepository.findById(id);
 
         if (usuarioOpt.isEmpty()) {
@@ -156,10 +157,35 @@ public class UsuarioService {
             usuario.setSenha(senhaEncoder.criptografar(dto.getSenha()));
         }
 
-        usuario.setFoto(dto.getFoto());
+        if (dto.getFoto() != null) {
+            usuario.setFoto(dto.getFoto());
+        }
 
         usuario = usuarioRepository.save(usuario);
         return new UsuarioResponseDTO(usuario);
+    }
+
+    @Transactional
+    public UsuarioResponseDTO atualizarImagem(String id, MultipartFile imagem) {
+        validarSolicitante(id, "alterar");
+
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+        if (!usuario.isAtivo()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Usuário inativo não pode ser alterado");
+        }
+
+        usuario.setFoto(cloudinaryService.enviarFotoDePerfil(id, imagem));
+        return new UsuarioResponseDTO(usuarioRepository.save(usuario));
+    }
+
+    private void validarSolicitante(String id, String acao) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication == null ? null : authentication.getPrincipal();
+        if (!(principal instanceof Usuario solicitante) || !solicitante.getId().equals(id)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Você só pode " + acao + " a própria conta");
+        }
     }
 
     public Optional<LoginResponseDTO> autenticar(String email, String senha) {
