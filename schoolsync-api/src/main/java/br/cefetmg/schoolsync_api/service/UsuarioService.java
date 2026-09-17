@@ -184,9 +184,16 @@ public class UsuarioService {
 
     private void validarSolicitante(String id, String acao) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        System.out.println("AUTH: " + authentication);
+        System.out.println("PRINCIPAL: " + authentication.getPrincipal());
+        System.out.println("TIPO: " + authentication.getPrincipal().getClass());
+
         Object principal = authentication == null ? null : authentication.getPrincipal();
+
         if (!(principal instanceof Usuario solicitante) || !solicitante.getId().equals(id)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
                     "Você só pode " + acao + " a própria conta");
         }
     }
@@ -204,8 +211,7 @@ public class UsuarioService {
             if (senhaEncoder.verificar(senha, usuario.getSenha())) {
                 return Optional.of(new LoginResponseDTO(
                         jwtService.gerarToken(usuario),
-                        new UsuarioResponseDTO(usuario)
-                ));
+                        new UsuarioResponseDTO(usuario)));
             }
             return Optional.empty();
         } else {
