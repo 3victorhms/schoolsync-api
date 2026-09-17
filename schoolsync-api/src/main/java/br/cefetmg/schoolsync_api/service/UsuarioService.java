@@ -185,13 +185,15 @@ public class UsuarioService {
     private void validarSolicitante(String id, String acao) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        System.out.println("AUTH: " + authentication);
-        System.out.println("PRINCIPAL: " + authentication.getPrincipal());
-        System.out.println("TIPO: " + authentication.getPrincipal().getClass());
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Usuário não autenticado");
+        }
 
-        Object principal = authentication == null ? null : authentication.getPrincipal();
+        String idSolicitante = authentication.getName();
 
-        if (!(principal instanceof Usuario solicitante) || !solicitante.getId().equals(id)) {
+        if (!idSolicitante.equals(id)) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
                     "Você só pode " + acao + " a própria conta");
