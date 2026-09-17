@@ -41,6 +41,7 @@ class UsuarioServiceTest {
     @Mock private GrupoRepository grupoRepository;
     @Mock private TarefaRepository tarefaRepository;
     @Mock private DispositivoPushRepository dispositivoPushRepository;
+    @Mock private CloudinaryService cloudinaryService;
     @InjectMocks private UsuarioService usuarioService;
 
     @AfterEach

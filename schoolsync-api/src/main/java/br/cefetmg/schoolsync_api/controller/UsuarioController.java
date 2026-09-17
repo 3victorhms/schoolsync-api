@@ -8,8 +8,10 @@ import br.cefetmg.schoolsync_api.service.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -77,6 +79,14 @@ public class UsuarioController {
     public ResponseEntity<UsuarioResponseDTO> atualizar(@PathVariable String id, @Valid @RequestBody UsuarioRequestDTO usuarioRequestDTO) {
         UsuarioResponseDTO usuarioResponseDTO = usuarioService.update(id, usuarioRequestDTO);
         return ResponseEntity.ok(usuarioResponseDTO);
+    }
+
+    @PatchMapping(value = "/{id}/imagem", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Enviar foto de perfil")
+    public ResponseEntity<UsuarioResponseDTO> atualizarImagem(
+            @PathVariable String id,
+            @RequestParam("imagem") MultipartFile imagem) {
+        return ResponseEntity.ok(usuarioService.atualizarImagem(id, imagem));
     }
 
     @DeleteMapping("/{id}")
