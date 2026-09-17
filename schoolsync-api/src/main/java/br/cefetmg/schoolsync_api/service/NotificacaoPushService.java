@@ -62,31 +62,75 @@ public class NotificacaoPushService {
 
     @Async
     public void enviar(String idUsuario, String tipo, String titulo, String mensagem, String targetId) {
-        FirebaseMessaging firebaseMessaging = firebaseMessagingProvider.getIfAvailable();
-        if (firebaseMessaging == null) {
-            log.debug("Push ignorado: Firebase não está habilitado no servidor");
-            return;
-        }
-
-        List<DispositivoPush> dispositivos = dispositivoRepository.findAllByUsuario_Id(idUsuario);
-        if (dispositivos.isEmpty()) return;
-
-        List<Message> mensagens = dispositivos.stream()
-                .map(dispositivo -> montarMensagem(dispositivo.getToken(), tipo, titulo, mensagem, targetId))
-                .toList();
-
         try {
-            BatchResponse resposta = firebaseMessaging.sendEach(mensagens);
-            removerTokensInvalidos(dispositivos, resposta.getResponses());
+            enviarAgora(idUsuario, tipo, titulo, mensagem, targetId, false);
         } catch (FirebaseMessagingException ex) {
             log.warn("Não foi possível enviar notificação push ao usuário {}: {}", idUsuario, ex.getMessage());
         }
     }
 
+    /** Dispara uma notificação real para o dispositivo do usuário autenticado. */
+    public void testarEnvioParaUsuarioAutenticado() {
+        Usuario usuario = usuarioAutenticado();
+        try {
+            int enviados = enviarAgora(
+                    usuario.getId(),
+                    "TESTE_NOTIFICACAO",
+                    "Teste do SchoolSync",
+                    "Esta é uma notificação enviada pelo servidor.",
+                    null,
+                    true);
+
+            if (enviados == 0) {
+                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
+                        "O Firebase não confirmou o envio da notificação");
+            }
+        } catch (FirebaseMessagingException ex) {
+            log.warn("Falha no teste de push para o usuário {}: {}", usuario.getId(), ex.getMessage());
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
+                    "O Firebase recusou a notificação de teste", ex);
+        }
+    }
+
+    private int enviarAgora(
+            String idUsuario,
+            String tipo,
+            String titulo,
+            String mensagem,
+            String targetId,
+            boolean exigido
+    ) throws FirebaseMessagingException {
+        FirebaseMessaging firebaseMessaging = firebaseMessagingProvider.getIfAvailable();
+        if (firebaseMessaging == null) {
+            if (exigido) {
+                throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                        "O Firebase não está configurado no servidor");
+            }
+            log.debug("Push ignorado: Firebase não está habilitado no servidor");
+            return 0;
+        }
+
+        List<DispositivoPush> dispositivos = dispositivoRepository.findAllByUsuario_Id(idUsuario);
+        if (dispositivos.isEmpty()) {
+            if (exigido) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Este celular ainda não está registrado para receber notificações push");
+            }
+            return 0;
+        }
+
+        List<Message> mensagens = dispositivos.stream()
+                .map(dispositivo -> montarMensagem(dispositivo.getToken(), tipo, titulo, mensagem, targetId))
+                .toList();
+        BatchResponse resposta = firebaseMessaging.sendEach(mensagens);
+        removerTokensInvalidos(dispositivos, resposta.getResponses());
+        return resposta.getSuccessCount();
+    }
+
     private Message montarMensagem(String token, String tipo, String titulo, String mensagem, String targetId) {
         String tag = targetId == null || targetId.isBlank() ? tipo : tipo + ":" + targetId;
         Message.Builder builder = Message.builder()
-                .setFid(token)
+                .setToken(token)
                 .setNotification(Notification.builder().setTitle(titulo).setBody(mensagem).build())
                 .setAndroidConfig(AndroidConfig.builder()
                         .setPriority(AndroidConfig.Priority.HIGH)
