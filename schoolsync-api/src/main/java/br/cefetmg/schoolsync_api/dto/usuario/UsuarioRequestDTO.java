@@ -23,10 +23,10 @@ public class UsuarioRequestDTO {
     @Size(max = 200, message = "O email deve ter no máximo 200 caracteres")
     private String email;
 
-    @Size(min = 6, message = "A senha deve ter no mínimo 6 caracteres")
-    @Pattern(regexp = "^$|.{6,}", message = "A senha deve ter no mínimo 6 caracteres")
+    // n coloquei obrigatória pq na hora de dar update n é obrigatório
+      @Size(min = 6, message = "A senha deve ter no mínimo 6 caracteres")
     private String senha;
-
+    
     @Size(max = 750000, message = "A foto de perfil é muito grande")
     private String foto;
 }
