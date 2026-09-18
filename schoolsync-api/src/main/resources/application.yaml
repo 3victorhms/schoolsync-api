@@ -10,7 +10,7 @@ spring:
   datasource:
     url: ${DATASOURCE_URL:jdbc:postgresql://ep-dark-firefly-ac5fljc3-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require}
     username: ${DATASOURCE_USER:neondb_owner}
-    password: ${DATASOURCE_PWD:npg_KVcDIr4Was1u}
+    password: ${DATASOURCE_PWD:npg_FjL1Ig3MXlPv}
     driver-class-name: ${DATASOURCE_DRIVER:org.postgresql.Driver}
 
   jpa:
