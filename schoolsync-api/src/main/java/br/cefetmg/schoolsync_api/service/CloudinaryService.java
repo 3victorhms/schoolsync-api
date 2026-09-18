@@ -1,12 +1,13 @@
 package br.cefetmg.schoolsync_api.service;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.util.Base64;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -14,7 +15,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -27,6 +27,9 @@ public class CloudinaryService {
     private static final long TAMANHO_MAXIMO = 5L * 1024 * 1024;
     private static final String PASTA_PERFIS = "schoolsync/perfis";
 
+    // Ex.: "data:image/png;base64,iVBORw0KGgo..."
+    private static final Pattern DATA_URI = Pattern.compile("^data:(image/[a-zA-Z+.-]+);base64,(.+)$", Pattern.DOTALL);
+
     private final CloudinaryProperties properties;
     private final RestClient restClient;
 
@@ -35,12 +38,18 @@ public class CloudinaryService {
         this.restClient = RestClient.create();
     }
 
-    public String enviarFotoDePerfil(String idUsuario, MultipartFile imagem) {
+    /**
+     * Envia a foto de perfil ao Cloudinary a partir de uma Data URI em Base64
+     * (ex.: "data:image/jpeg;base64,....."). Enviamos a própria string para o
+     * Cloudinary (ele aceita Data URI diretamente no campo "file"), então essa
+     * chamada nunca precisa montar um corpo multipart/binário.
+     */
+    public String enviarFotoDePerfil(String idUsuario, String imagemDataUri) {
         if (!properties.configurado()) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
                     "O envio de imagens ainda não foi configurado no servidor");
         }
-        validarImagem(imagem);
+        validarImagem(imagemDataUri);
 
         long timestamp = Instant.now().getEpochSecond();
         String publicId = "usuario-" + idUsuario;
@@ -50,7 +59,7 @@ public class CloudinaryService {
                 + "&timestamp=" + timestamp;
 
         MultiValueMap<String, Object> corpo = new LinkedMultiValueMap<>();
-        corpo.add("file", recursoDaImagem(imagem));
+        corpo.add("file", imagemDataUri);
         corpo.add("api_key", properties.apiKey());
         corpo.add("timestamp", String.valueOf(timestamp));
         corpo.add("folder", PASTA_PERFIS);
@@ -78,33 +87,39 @@ public class CloudinaryService {
         }
     }
 
-    private void validarImagem(MultipartFile imagem) {
-        if (imagem == null || imagem.isEmpty()) {
+    private void validarImagem(String imagemDataUri) {
+        if (imagemDataUri == null || imagemDataUri.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Envie uma imagem para o perfil");
         }
-        if (imagem.getSize() > TAMANHO_MAXIMO) {
-            throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE,
-                    "A imagem deve ter no máximo 5 MB");
+
+        Matcher matcher = DATA_URI.matcher(imagemDataUri.trim());
+        if (!matcher.matches()) {
+            throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+                    "Envie uma imagem JPG, PNG ou WebP");
         }
-        String tipo = imagem.getContentType();
+
+        String tipo = matcher.group(1);
         if (!MediaType.IMAGE_JPEG_VALUE.equals(tipo)
                 && !MediaType.IMAGE_PNG_VALUE.equals(tipo)
                 && !"image/webp".equals(tipo)) {
             throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
                     "Envie uma imagem JPG, PNG ou WebP");
         }
-    }
 
-    private ByteArrayResource recursoDaImagem(MultipartFile imagem) {
+        String base64 = matcher.group(2);
+        byte[] bytes;
         try {
-            return new ByteArrayResource(imagem.getBytes()) {
-                @Override
-                public String getFilename() {
-                    return imagem.getOriginalFilename() == null ? "perfil.jpg" : imagem.getOriginalFilename();
-                }
-            };
-        } catch (IOException ex) {
+            bytes = Base64.getDecoder().decode(base64);
+        } catch (IllegalArgumentException ex) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Não foi possível ler a imagem", ex);
+        }
+
+        if (bytes.length == 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Envie uma imagem para o perfil");
+        }
+        if (bytes.length > TAMANHO_MAXIMO) {
+            throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE,
+                    "A imagem deve ter no máximo 5 MB");
         }
     }
 

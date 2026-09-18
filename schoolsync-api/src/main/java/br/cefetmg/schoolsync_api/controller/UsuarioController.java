@@ -4,14 +4,13 @@ import br.cefetmg.schoolsync_api.dto.usuario.LoginDTO;
 import br.cefetmg.schoolsync_api.dto.usuario.LoginResponseDTO;
 import br.cefetmg.schoolsync_api.dto.usuario.UsuarioRequestDTO;
 import br.cefetmg.schoolsync_api.dto.usuario.UsuarioResponseDTO;
+import br.cefetmg.schoolsync_api.dto.usuario.ImagemUsuarioDTO;
 import br.cefetmg.schoolsync_api.service.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -81,12 +80,12 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioResponseDTO);
     }
 
-    @PatchMapping(value = "/{id}/imagem", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Enviar foto de perfil")
+    @PatchMapping("/{id}/imagem")
+    @Operation(summary = "Enviar foto de perfil (Data URI em Base64)")
     public ResponseEntity<UsuarioResponseDTO> atualizarImagem(
             @PathVariable String id,
-            @RequestParam("imagem") MultipartFile imagem) {
-        return ResponseEntity.ok(usuarioService.atualizarImagem(id, imagem));
+            @Valid @RequestBody ImagemUsuarioDTO dto) {
+        return ResponseEntity.ok(usuarioService.atualizarImagem(id, dto.getImagemBase64()));
     }
 
     @DeleteMapping("/{id}")
