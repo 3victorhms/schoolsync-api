@@ -80,7 +80,7 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioResponseDTO);
     }
 
-    @PatchMapping("/{id}/imagem")
+    @PutMapping("/{id}/imagem")
     @Operation(summary = "Enviar foto de perfil (Data URI em Base64)")
     public ResponseEntity<UsuarioResponseDTO> atualizarImagem(
             @PathVariable String id,
