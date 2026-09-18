@@ -8,9 +8,9 @@ spring:
       max-request-size: 5MB
 
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://ep-dark-firefly-ac5fljc3-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require}
-    username: ${DATABASE_USER}
-    password: ${DATABASE_PASSWORD}
+    url: ${DATASOURCE_URL:jdbc:postgresql://ep-dark-firefly-ac5fljc3-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require}
+    username: ${DATASOURCE_USER:neondb_owner}
+    password: ${DATASOURCE_PWD:npg_KVcDIr4Was1u}
     driver-class-name: ${DATASOURCE_DRIVER:org.postgresql.Driver}
 
   jpa:
@@ -27,7 +27,7 @@ server:
     include-binding-errors: always
 
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:schoolsync-dev-secret-key-change-me-with-at-least-32-chars}
   expiration-ms: ${JWT_EXPIRATION_MS:86400000}
 
 firebase:
