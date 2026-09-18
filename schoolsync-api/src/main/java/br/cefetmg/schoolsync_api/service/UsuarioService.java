@@ -13,7 +13,6 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import br.cefetmg.schoolsync_api.repository.SalaRepository;
 import br.cefetmg.schoolsync_api.repository.GrupoRepository;
@@ -169,7 +168,7 @@ public class UsuarioService {
     }
 
     @Transactional
-    public UsuarioResponseDTO atualizarImagem(String id, MultipartFile imagem) {
+    public UsuarioResponseDTO atualizarImagem(String id, String imagemBase64) {
         validarSolicitante(id, "alterar");
 
         Usuario usuario = usuarioRepository.findById(id)
@@ -178,7 +177,7 @@ public class UsuarioService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Usuário inativo não pode ser alterado");
         }
 
-        usuario.setFoto(cloudinaryService.enviarFotoDePerfil(id, imagem));
+        usuario.setFoto(cloudinaryService.enviarFotoDePerfil(id, imagemBase64));
         return new UsuarioResponseDTO(usuarioRepository.save(usuario));
     }
 
