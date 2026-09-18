@@ -169,40 +169,21 @@ public class UsuarioService {
 
     @Transactional
     public UsuarioResponseDTO atualizarImagem(String id, String imagemBase64) {
-        System.out.println("[DIAG-IMG] 1-inicio id=" + id);
-        try {
-            validarSolicitante(id, "alterar");
-            System.out.println("[DIAG-IMG] 2-passou validarSolicitante");
+        validarSolicitante(id, "alterar");
 
-            Usuario usuario = usuarioRepository.findById(id)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
-            System.out.println("[DIAG-IMG] 3-usuario encontrado ativo=" + usuario.isAtivo());
-            if (!usuario.isAtivo()) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Usuário inativo não pode ser alterado");
-            }
-
-            System.out.println("[DIAG-IMG] 4-chamando cloudinary");
-            String urlFoto = cloudinaryService.enviarFotoDePerfil(id, imagemBase64);
-            System.out.println("[DIAG-IMG] 5-cloudinary respondeu ok");
-            usuario.setFoto(urlFoto);
-            UsuarioResponseDTO resultado = new UsuarioResponseDTO(usuarioRepository.save(usuario));
-            System.out.println("[DIAG-IMG] 6-salvo com sucesso");
-            return resultado;
-        } catch (Throwable t) {
-            System.out.println("[DIAG-IMG] ERRO classe=" + t.getClass().getName() + " msg=" + t.getMessage());
-            t.printStackTrace();
-            throw t;
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+        if (!usuario.isAtivo()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Usuário inativo não pode ser alterado");
         }
+
+        usuario.setFoto(cloudinaryService.enviarFotoDePerfil(id, imagemBase64));
+        return new UsuarioResponseDTO(usuarioRepository.save(usuario));
     }
 
     private void validarSolicitante(String id, String acao) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Object principal = authentication == null ? null : authentication.getPrincipal();
-        System.out.println("[DIAG-AUTH] acao=" + acao + " idSolicitado=" + id
-                + " authNull=" + (authentication == null)
-                + " principalClass=" + (principal == null ? "null" : principal.getClass().getName())
-                + " principalId=" + (principal instanceof Usuario u ? u.getId() : "n/a")
-                + " authorities=" + (authentication == null ? "n/a" : authentication.getAuthorities()));
         if (!(principal instanceof Usuario solicitante) || !solicitante.getId().equals(id)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Você só pode " + acao + " a própria conta");
