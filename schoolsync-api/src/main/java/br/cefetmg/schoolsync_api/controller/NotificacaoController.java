@@ -49,8 +49,16 @@ public class NotificacaoController {
 
     @PostMapping("/push/teste")
     public ResponseEntity<Void> testarPush() {
-        notificacaoPushService.testarEnvioParaUsuarioAutenticado();
-        return ResponseEntity.noContent().build();
+        System.out.println("[DIAG-PUSH] controller testarPush chamado");
+        try {
+            notificacaoPushService.testarEnvioParaUsuarioAutenticado();
+            System.out.println("[DIAG-PUSH] testarEnvioParaUsuarioAutenticado retornou sem erro");
+            return ResponseEntity.noContent().build();
+        } catch (Throwable t) {
+            System.out.println("[DIAG-PUSH] ERRO classe=" + t.getClass().getName() + " msg=" + t.getMessage());
+            t.printStackTrace();
+            throw t;
+        }
     }
 
     @GetMapping("/usuario/{idUsuario}")
