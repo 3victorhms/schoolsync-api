@@ -184,6 +184,11 @@ public class UsuarioService {
     private void validarSolicitante(String id, String acao) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Object principal = authentication == null ? null : authentication.getPrincipal();
+        System.out.println("[DIAG-AUTH] acao=" + acao + " idSolicitado=" + id
+                + " authNull=" + (authentication == null)
+                + " principalClass=" + (principal == null ? "null" : principal.getClass().getName())
+                + " principalId=" + (principal instanceof Usuario u ? u.getId() : "n/a")
+                + " authorities=" + (authentication == null ? "n/a" : authentication.getAuthorities()));
         if (!(principal instanceof Usuario solicitante) || !solicitante.getId().equals(id)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Você só pode " + acao + " a própria conta");
