@@ -169,16 +169,30 @@ public class UsuarioService {
 
     @Transactional
     public UsuarioResponseDTO atualizarImagem(String id, String imagemBase64) {
-        validarSolicitante(id, "alterar");
+        System.out.println("[DIAG-IMG] 1-inicio id=" + id);
+        try {
+            validarSolicitante(id, "alterar");
+            System.out.println("[DIAG-IMG] 2-passou validarSolicitante");
 
-        Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
-        if (!usuario.isAtivo()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Usuário inativo não pode ser alterado");
+            Usuario usuario = usuarioRepository.findById(id)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+            System.out.println("[DIAG-IMG] 3-usuario encontrado ativo=" + usuario.isAtivo());
+            if (!usuario.isAtivo()) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Usuário inativo não pode ser alterado");
+            }
+
+            System.out.println("[DIAG-IMG] 4-chamando cloudinary");
+            String urlFoto = cloudinaryService.enviarFotoDePerfil(id, imagemBase64);
+            System.out.println("[DIAG-IMG] 5-cloudinary respondeu ok");
+            usuario.setFoto(urlFoto);
+            UsuarioResponseDTO resultado = new UsuarioResponseDTO(usuarioRepository.save(usuario));
+            System.out.println("[DIAG-IMG] 6-salvo com sucesso");
+            return resultado;
+        } catch (Throwable t) {
+            System.out.println("[DIAG-IMG] ERRO classe=" + t.getClass().getName() + " msg=" + t.getMessage());
+            t.printStackTrace();
+            throw t;
         }
-
-        usuario.setFoto(cloudinaryService.enviarFotoDePerfil(id, imagemBase64));
-        return new UsuarioResponseDTO(usuarioRepository.save(usuario));
     }
 
     private void validarSolicitante(String id, String acao) {
