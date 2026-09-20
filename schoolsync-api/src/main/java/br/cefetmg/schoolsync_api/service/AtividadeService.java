@@ -112,8 +112,8 @@ public class AtividadeService {
     }
 
     private void validarPontuacao(String idSala, String disciplina, Double novoValor, String idIgnorado) {
-        if (novoValor == null || novoValor <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O valor da atividade deve ser maior que zero");
+        if (novoValor == null || novoValor < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O valor da atividade não pode ser negativo");
         }
 
         if (novoValor > VALOR_MAXIMO_POR_ATIVIDADE) {
