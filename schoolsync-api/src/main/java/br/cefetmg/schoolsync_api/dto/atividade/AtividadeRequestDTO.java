@@ -25,7 +25,7 @@ public class AtividadeRequestDTO {
     private LocalDate dataEntrega;
 
     @NotNull
-    @DecimalMin(value = "0.01", message = "O valor deve ser maior que zero")
+    @DecimalMin(value = "0.0", message = "O valor não pode ser negativo")
     @DecimalMax(value = "15.0", message = "O valor máximo de uma atividade é 15 pontos")
     private Double valor;
 
