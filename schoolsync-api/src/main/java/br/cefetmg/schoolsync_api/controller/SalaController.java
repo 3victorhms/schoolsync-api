@@ -18,7 +18,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/salas")
-@CrossOrigin(origins = "http://localhost:8100")
 @Tag(name = "Sala")
 public class SalaController {
 

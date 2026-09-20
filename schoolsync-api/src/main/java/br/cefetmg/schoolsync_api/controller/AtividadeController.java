@@ -15,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/atividades")
-@CrossOrigin(origins = "http://localhost:8100")
 @Tag(name = "Atividade")
 @RequiredArgsConstructor
 public class AtividadeController {
