@@ -7,7 +7,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import br.cefetmg.schoolsync_api.dto.sala.SalaRequestDTO;
 import br.cefetmg.schoolsync_api.dto.sala.SalaResponseDTO;
@@ -80,11 +82,13 @@ public class SalaService {
         );
 
         if (jaMembro) {
-            throw new IllegalArgumentException("Voce ja esta nesta sala");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Você já está nesta sala");
         }
 
         if (sala.getMembros().size() >= MAXIMO_MEMBROS_POR_SALA) {
-            throw new IllegalArgumentException("Esta sala já atingiu o limite de 50 alunos");
+            // 409: a requisição é válida, mas a sala está cheia (RN16).
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Esta sala já atingiu o limite de " + MAXIMO_MEMBROS_POR_SALA + " alunos");
         }
 
         Membros novoMembro = new Membros();
