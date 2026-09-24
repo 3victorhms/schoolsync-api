@@ -1,5 +1,6 @@
 package br.cefetmg.schoolsync_api.controller;
 
+import br.cefetmg.schoolsync_api.security.UsuarioAtual;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -29,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 public class ComentarioController {
 
     private final ComentarioService comentarioService;
+    private final UsuarioAtual usuarioAtual;
 
     @GetMapping("/atividades/{idAtividade}/comentarios")
     public ResponseEntity<List<ComentarioResponseDTO>> listarPorAtividade(
@@ -42,6 +44,7 @@ public class ComentarioController {
             @PathVariable String idAtividade,
             @Valid @RequestBody ComentarioRequestDTO dto
     ) {
+        usuarioAtual.validar(dto.getIdUsuario());
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(comentarioService.criar(idAtividade, dto));
@@ -52,6 +55,7 @@ public class ComentarioController {
             @PathVariable String idComentario,
             @Valid @RequestBody ComentarioUpdateDTO dto
     ) {
+        usuarioAtual.validar(dto.getIdUsuario());
         return ResponseEntity.ok(comentarioService.atualizar(idComentario, dto));
     }
 
@@ -60,6 +64,7 @@ public class ComentarioController {
             @PathVariable String idComentario,
             @RequestParam String idUsuario
     ) {
+        usuarioAtual.validar(idUsuario);
         comentarioService.excluir(idComentario, idUsuario);
         return ResponseEntity.noContent().build();
     }

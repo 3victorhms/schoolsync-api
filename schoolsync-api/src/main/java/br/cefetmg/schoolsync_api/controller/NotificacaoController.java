@@ -1,5 +1,6 @@
 package br.cefetmg.schoolsync_api.controller;
 
+import br.cefetmg.schoolsync_api.security.UsuarioAtual;
 import java.util.List;
 
 import org.springframework.http.MediaType;
@@ -32,6 +33,7 @@ public class NotificacaoController {
 
     private final NotificacaoService notificacaoService;
     private final NotificacaoPushService notificacaoPushService;
+    private final UsuarioAtual usuarioAtual;
 
     @PostMapping("/push/dispositivo")
     public ResponseEntity<Void> registrarDispositivo(@Valid @RequestBody DispositivoPushDTO dto) {
@@ -53,23 +55,27 @@ public class NotificacaoController {
 
     @GetMapping("/usuario/{idUsuario}")
     public ResponseEntity<List<NotificacaoResponseDTO>> listarPorUsuario(@PathVariable String idUsuario) {
+        usuarioAtual.validar(idUsuario);
         return ResponseEntity.ok(notificacaoService.listarPorUsuario(idUsuario));
     }
 
     @PutMapping("/{id}/lida")
     public ResponseEntity<Void> marcarComoLida(@PathVariable String id) {
+        notificacaoService.validarDono(id, usuarioAtual.id());
         notificacaoService.marcarComoLida(id);
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/usuario/{idUsuario}/lidas")
     public ResponseEntity<Void> marcarTodasComoLidas(@PathVariable String idUsuario) {
+        usuarioAtual.validar(idUsuario);
         notificacaoService.marcarTodasComoLidas(idUsuario);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/usuario/{idUsuario}/configuracoes")
     public ResponseEntity<NotificacaoConfiguracaoDTO> buscarConfiguracao(@PathVariable String idUsuario) {
+        usuarioAtual.validar(idUsuario);
         return ResponseEntity.ok(notificacaoService.buscarConfiguracao(idUsuario));
     }
 
@@ -78,11 +84,13 @@ public class NotificacaoController {
             @PathVariable String idUsuario,
             @Valid @RequestBody NotificacaoConfiguracaoDTO dto
     ) {
+        usuarioAtual.validar(idUsuario);
         return ResponseEntity.ok(notificacaoService.salvarConfiguracao(idUsuario, dto));
     }
 
     @GetMapping(value = "/usuario/{idUsuario}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter stream(@PathVariable String idUsuario) {
+        usuarioAtual.validar(idUsuario);
         return notificacaoService.conectar(idUsuario);
     }
 }

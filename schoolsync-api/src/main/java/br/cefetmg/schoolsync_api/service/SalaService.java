@@ -35,6 +35,7 @@ public class SalaService {
     private final UsuarioRepository usuarioRepository;
     private final MembrosRepository membrosRepository;
     private final CadernoRepository cadernoRepository;
+    private final GrupoService grupoService;
 
     public SalaResponseDTO criar(SalaRequestDTO dto, String idLider) {
         Usuario lider = usuarioRepository.findById(idLider)
@@ -172,6 +173,9 @@ public class SalaService {
                 cadernoRepository.findByAtividade_Sala_IdAndUsuario_Id(sala.getId(), idUsuario)
         );
 
+        // Quem sai da sala sai também dos grupos dela (tarefas vão para o líder do grupo).
+        grupoService.removerUsuarioDosGruposDaSala(sala.getId(), idUsuario);
+
         sala.getMembros().removeIf(m -> m.getId().equals(membro.getId()));
         membrosRepository.delete(membro);
     }
@@ -198,5 +202,16 @@ public class SalaService {
         } while (salaRepository.existsByCodigoConvite(codigo));
 
         return codigo;
+    }
+
+    /** Editar ou excluir a sala: só o líder. */
+    @Transactional(readOnly = true)
+    public void validarLider(String idSala, String idUsuario) {
+        Sala sala = salaRepository.findById(idSala)
+                .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
+
+        if (!sala.getLider().getId().equals(idUsuario)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas o líder da sala pode fazer isso");
+        }
     }
 }

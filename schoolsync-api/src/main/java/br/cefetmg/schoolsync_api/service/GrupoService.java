@@ -2,11 +2,14 @@ package br.cefetmg.schoolsync_api.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import br.cefetmg.schoolsync_api.dto.grupo.GrupoRequestDTO;
 import br.cefetmg.schoolsync_api.dto.grupo.GrupoResponseDTO;
@@ -14,11 +17,13 @@ import br.cefetmg.schoolsync_api.dto.grupo.GrupoResumoDTO;
 import br.cefetmg.schoolsync_api.entity.Grupo;
 import br.cefetmg.schoolsync_api.entity.GrupoMembro;
 import br.cefetmg.schoolsync_api.entity.Sala;
+import br.cefetmg.schoolsync_api.entity.Tarefa;
 import br.cefetmg.schoolsync_api.entity.Usuario;
 import br.cefetmg.schoolsync_api.repository.GrupoMembroRepository;
 import br.cefetmg.schoolsync_api.repository.GrupoRepository;
 import br.cefetmg.schoolsync_api.repository.MembrosRepository;
 import br.cefetmg.schoolsync_api.repository.SalaRepository;
+import br.cefetmg.schoolsync_api.repository.TarefaRepository;
 import br.cefetmg.schoolsync_api.repository.UsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +38,7 @@ public class GrupoService {
     private final UsuarioRepository usuarioRepository;
     private final MembrosRepository membrosRepository;
     private final NotificacaoService notificacaoService;
+    private final TarefaRepository tarefaRepository;
 
     @Transactional
     public GrupoResponseDTO criar(GrupoRequestDTO dto) {
@@ -146,9 +152,67 @@ public class GrupoService {
             throw new IllegalArgumentException("O criador do grupo nao pode sair por enquanto");
         }
 
+        removerDoGrupo(grupo, idUsuario);
+    }
+
+    /** O líder do grupo remove um membro. As tarefas do membro passam para o líder. */
+    @Transactional
+    public void removerMembro(String idGrupo, String idUsuarioRemover, String idUsuarioLogado) {
+        Grupo grupo = buscarGrupo(idGrupo);
+
+        if (!grupo.getCriador().getId().equals(idUsuarioLogado)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas o líder do grupo pode remover membros");
+        }
+
+        if (grupo.getCriador().getId().equals(idUsuarioRemover)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O líder do grupo não pode ser removido");
+        }
+
+        removerDoGrupo(grupo, idUsuarioRemover);
+    }
+
+    /**
+     * Chamado quando o usuário sai ou é removido de uma sala: ele também sai
+     * de todos os grupos daquela sala. Se ele era o líder de um grupo, a
+     * liderança passa para o membro mais antigo; se o grupo ficar vazio, o
+     * grupo é excluído.
+     */
+    @Transactional
+    public void removerUsuarioDosGruposDaSala(String idSala, String idUsuario) {
+        List<Grupo> grupos = grupoRepository.findBySala_IdAndMembros_Usuario_Id(idSala, idUsuario);
+
+        for (Grupo grupo : grupos) {
+            if (grupo.getCriador().getId().equals(idUsuario)) {
+                Optional<GrupoMembro> sucessor = grupo.getMembros().stream()
+                        .filter(m -> !m.getUsuario().getId().equals(idUsuario))
+                        .findFirst(); // membros já vêm ordenados por data de entrada
+
+                if (sucessor.isEmpty()) {
+                    grupoRepository.delete(grupo);
+                    continue;
+                }
+
+                grupo.setCriador(sucessor.get().getUsuario());
+                grupoRepository.save(grupo);
+            }
+
+            removerDoGrupo(grupo, idUsuario);
+        }
+    }
+
+    /** Tira o usuário do grupo e passa as tarefas atribuídas a ele para o líder do grupo. */
+    private void removerDoGrupo(Grupo grupo, String idUsuario) {
         GrupoMembro membro = grupoMembroRepository
-                .findByGrupo_IdAndUsuario_Id(idGrupo, idUsuario)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario nao encontrado neste grupo"));
+                .findByGrupo_IdAndUsuario_Id(grupo.getId(), idUsuario)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado neste grupo"));
+
+        List<Tarefa> tarefasDoMembro = tarefaRepository.findByGrupo_IdOrderByDataCriacaoAsc(grupo.getId())
+                .stream()
+                .filter(tarefa -> tarefa.getAtribuidoPara() != null
+                        && tarefa.getAtribuidoPara().getId().equals(idUsuario))
+                .collect(Collectors.toList());
+        tarefasDoMembro.forEach(tarefa -> tarefa.setAtribuidoPara(grupo.getCriador()));
+        tarefaRepository.saveAll(tarefasDoMembro);
 
         grupo.getMembros().removeIf(m -> m.getId().equals(membro.getId()));
         grupoMembroRepository.delete(membro);
