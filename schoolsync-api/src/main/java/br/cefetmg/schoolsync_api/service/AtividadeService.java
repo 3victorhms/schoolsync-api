@@ -237,4 +237,28 @@ public class AtividadeService {
         caderno.setStatus(status);
         cadernoRepository.save(caderno);
     }
+
+    /** Editar ou excluir: só quem criou a atividade ou o líder da sala. */
+    @Transactional(readOnly = true)
+    public void validarPodeGerenciar(String idAtividade, String idUsuario) {
+        Atividade atividade = atividadeRepository.findById(idAtividade)
+                .orElseThrow(() -> new EntityNotFoundException("Atividade nao encontrada"));
+
+        boolean criador = atividade.getCriadaPor() != null && atividade.getCriadaPor().getId().equals(idUsuario);
+        boolean liderDaSala = atividade.getSala().getLider().getId().equals(idUsuario);
+        if (!criador && !liderDaSala) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Apenas quem criou a atividade ou o líder da sala pode alterá-la");
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public void validarLiderDaSala(String idSala, String idUsuario) {
+        Sala sala = salaRepository.findById(idSala)
+                .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
+
+        if (!sala.getLider().getId().equals(idUsuario)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas o líder da sala pode fazer isso");
+        }
+    }
 }

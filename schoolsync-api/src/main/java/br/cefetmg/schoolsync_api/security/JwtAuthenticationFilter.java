@@ -30,9 +30,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
         String authorization = request.getHeader("Authorization");
+        String token = null;
 
         if (authorization != null && authorization.startsWith("Bearer ")) {
-            String token = authorization.substring(7);
+            token = authorization.substring(7);
+        } else if (ehStreamDeNotificacoes(request)) {
+            // O EventSource do navegador não envia cabeçalhos, então o stream
+            // de notificações recebe o token pela URL (?token=...).
+            token = request.getParameter("token");
+        }
+
+        if (token != null && !token.isBlank()) {
 
             if (jwtService.tokenValido(token)) {
                 String idUsuario = jwtService.extrairIdUsuario(token);
@@ -41,6 +49,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private boolean ehStreamDeNotificacoes(HttpServletRequest request) {
+        return "GET".equals(request.getMethod())
+                && request.getRequestURI().matches(".*/notificacoes/usuario/[^/]+/stream$");
     }
 
     private void autenticar(Usuario usuario) {

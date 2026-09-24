@@ -1,5 +1,6 @@
 package br.cefetmg.schoolsync_api.controller;
 
+import br.cefetmg.schoolsync_api.security.UsuarioAtual;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,12 +25,16 @@ public class SalaController {
     @Autowired
     private SalaService salaService;
 
+    @Autowired
+    private UsuarioAtual usuarioAtual;
+
     @PostMapping
     @Operation(summary = "Criar sala")
     public ResponseEntity<SalaResponseDTO> criar(
             @Valid @RequestBody SalaRequestDTO salaRequestDTO,
             @RequestParam String idLider
     ) {
+        usuarioAtual.validar(idLider);
         SalaResponseDTO sala = salaService.criar(salaRequestDTO, idLider);
         return ResponseEntity.status(HttpStatus.CREATED).body(sala);
     }
@@ -40,6 +45,7 @@ public class SalaController {
             @PathVariable String id,
             @Valid @RequestBody SalaRequestDTO salaRequestDTO
     ) {
+        salaService.validarLider(id, usuarioAtual.id());
         return ResponseEntity.ok(salaService.atualizar(id, salaRequestDTO));
     }
 
@@ -49,6 +55,7 @@ public class SalaController {
             @RequestParam String codigoConvite,
             @RequestParam String idUsuario
     ) {
+        usuarioAtual.validar(idUsuario);
         return ResponseEntity.ok(salaService.entrar(codigoConvite, idUsuario));
     }
 
@@ -58,12 +65,14 @@ public class SalaController {
             @PathVariable String id,
             @RequestParam String idUsuarioLogado
     ) {
+        usuarioAtual.validar(idUsuarioLogado);
         return ResponseEntity.ok(salaService.buscarPorId(id, idUsuarioLogado));
     }
 
     @GetMapping("/usuario/{idUsuario}")
     @Operation(summary = "Listar salas que o usuário participa")
     public ResponseEntity<List<SalaResumoDTO>> listarPorUsuario(@PathVariable String idUsuario) {
+        usuarioAtual.validar(idUsuario);
         return ResponseEntity.ok(salaService.listarPorUsuario(idUsuario));
     }
 
@@ -74,6 +83,7 @@ public class SalaController {
             @PathVariable String idUsuarioRemover,
             @RequestParam String idUsuarioLogado
     ) {
+        usuarioAtual.validar(idUsuarioLogado);
         salaService.excluirMembro(idSala, idUsuarioRemover, idUsuarioLogado);
         return ResponseEntity.noContent().build();
     }
@@ -84,6 +94,7 @@ public class SalaController {
             @PathVariable String idSala,
             @RequestParam String idUsuario
     ) {
+        usuarioAtual.validar(idUsuario);
         salaService.sair(idSala, idUsuario);
         return ResponseEntity.noContent().build();
     }
@@ -91,6 +102,7 @@ public class SalaController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Excluir sala")
     public ResponseEntity<Void> excluir(@PathVariable String id) {
+        salaService.validarLider(id, usuarioAtual.id());
         salaService.excluir(id);
         return ResponseEntity.noContent().build();
     }

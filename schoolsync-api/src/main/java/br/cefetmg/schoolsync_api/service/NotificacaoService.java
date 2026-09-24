@@ -8,7 +8,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -192,6 +194,17 @@ public class NotificacaoService {
         List<SseEmitter> emitters = emittersPorUsuario.get(idUsuario);
         if (emitters != null) {
             emitters.remove(emitter);
+        }
+    }
+
+    /** Cada usuário só mexe nas próprias notificações. */
+    @Transactional(readOnly = true)
+    public void validarDono(String idNotificacao, String idUsuario) {
+        Notificacao notificacao = notificacaoRepository.findById(idNotificacao)
+                .orElseThrow(() -> new EntityNotFoundException("Notificacao nao encontrada"));
+
+        if (!notificacao.getUsuario().getId().equals(idUsuario)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Esta notificação não é sua");
         }
     }
 }
