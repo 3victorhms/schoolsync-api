@@ -24,7 +24,7 @@ public class UsuarioRequestDTO {
     private String email;
 
     // n coloquei obrigatória pq na hora de dar update n é obrigatório
-      @Size(min = 6, message = "A senha deve ter no mínimo 6 caracteres")
+      @Size(min = 8, max = 72, message = "A senha deve ter entre 8 e 72 caracteres")
     private String senha;
     
     @Size(max = 750000, message = "A foto de perfil é muito grande")

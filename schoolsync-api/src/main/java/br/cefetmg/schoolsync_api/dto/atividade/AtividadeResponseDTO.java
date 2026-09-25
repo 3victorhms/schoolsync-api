@@ -16,6 +16,8 @@ public class AtividadeResponseDTO {
     private Double valor;
     private String idSala;
     private String idCriador;
+    /** Líder da sala: também pode editar e excluir a atividade (moderação). */
+    private String idLiderSala;
 
     private boolean estaNoCaderno;
     private String status;
@@ -33,6 +35,7 @@ public class AtividadeResponseDTO {
         this.valor = atividade.getValor();
         this.idSala = atividade.getSala().getId();
         this.idCriador = atividade.getCriadaPor().getId();
+        this.idLiderSala = atividade.getSala().getLider().getId();
 
         this.estaNoCaderno = status != null;
         this.status = status;
