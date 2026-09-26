@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import br.cefetmg.schoolsync_api.dto.comentario.ComentarioRequestDTO;
 import br.cefetmg.schoolsync_api.dto.comentario.ComentarioResponseDTO;
 import br.cefetmg.schoolsync_api.dto.comentario.ComentarioUpdateDTO;
+import br.cefetmg.schoolsync_api.service.AtividadeService;
 import br.cefetmg.schoolsync_api.service.ComentarioService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -30,12 +31,14 @@ import lombok.RequiredArgsConstructor;
 public class ComentarioController {
 
     private final ComentarioService comentarioService;
+    private final AtividadeService atividadeService;
     private final UsuarioAtual usuarioAtual;
 
     @GetMapping("/atividades/{idAtividade}/comentarios")
     public ResponseEntity<List<ComentarioResponseDTO>> listarPorAtividade(
             @PathVariable String idAtividade
     ) {
+        atividadeService.validarAcessoAtividade(idAtividade, usuarioAtual.id());
         return ResponseEntity.ok(comentarioService.listarPorAtividade(idAtividade));
     }
 
@@ -45,6 +48,7 @@ public class ComentarioController {
             @Valid @RequestBody ComentarioRequestDTO dto
     ) {
         usuarioAtual.validar(dto.getIdUsuario());
+        atividadeService.validarAcessoAtividade(idAtividade, usuarioAtual.id());
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(comentarioService.criar(idAtividade, dto));

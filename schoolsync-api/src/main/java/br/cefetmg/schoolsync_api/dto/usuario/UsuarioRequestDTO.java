@@ -14,19 +14,18 @@ import lombok.Setter;
 @AllArgsConstructor
 public class UsuarioRequestDTO {
 
-    @NotBlank(message = "O nome é obrigatório")
-    @Size(max = 150, message = "O nome deve ter no máximo 150 caracteres")
-    private String nome;
+  @NotBlank(message = "O nome é obrigatório")
+  @Size(max = 150, message = "O nome deve ter no máximo 150 caracteres")
+  private String nome;
 
-    @NotBlank(message = "O email é obrigatório")
-    @Email(message = "Email inválido")
-    @Size(max = 200, message = "O email deve ter no máximo 200 caracteres")
-    private String email;
+  @NotBlank(message = "O email é obrigatório")
+  @Email(message = "Email inválido")
+  @Size(max = 200, message = "O email deve ter no máximo 200 caracteres")
+  private String email;
 
-    // n coloquei obrigatória pq na hora de dar update n é obrigatório
-      @Size(min = 8, max = 72, message = "A senha deve ter entre 8 e 72 caracteres")
-    private String senha;
-    
-    @Size(max = 750000, message = "A foto de perfil é muito grande")
-    private String foto;
+  @Size(min = 8, max = 72, message = "A senha deve ter entre 8 e 72 caracteres")
+  private String senha;
+
+  @Size(max = 750000, message = "A foto de perfil é muito grande")
+  private String foto;
 }

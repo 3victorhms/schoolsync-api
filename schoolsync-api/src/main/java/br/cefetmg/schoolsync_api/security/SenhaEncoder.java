@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 // https://docs.spring.io/spring-security/reference/features/authentication/password-storage.html
 // https://docs.spring.io/spring-security/site/docs/current/api/org/springframework/security/crypto/bcrypt/BCryptPasswordEncoder.html
 
+// atualização: aprendi com o Odilon na disciplina de DBF
+
 @Component
 public class SenhaEncoder {
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();

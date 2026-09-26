@@ -66,6 +66,7 @@ public class SalaController {
             @RequestParam String idUsuarioLogado
     ) {
         usuarioAtual.validar(idUsuarioLogado);
+        salaService.validarMembro(id, idUsuarioLogado);
         return ResponseEntity.ok(salaService.buscarPorId(id, idUsuarioLogado));
     }
 

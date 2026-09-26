@@ -206,6 +206,12 @@ public class SalaService {
 
     /** Editar ou excluir a sala: só o líder. */
     @Transactional(readOnly = true)
+    public void validarMembro(String idSala, String idUsuario) {
+        if (!membrosRepository.existsBySala_IdAndUsuario_Id(idSala, idUsuario)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você não participa desta sala");
+        }
+    }
+
     public void validarLider(String idSala, String idUsuario) {
         Sala sala = salaRepository.findById(idSala)
                 .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
