@@ -92,38 +92,50 @@ public class NotificacaoPushService {
         }
     }
 
-    private int enviarAgora(
-            String idUsuario,
-            String tipo,
-            String titulo,
-            String mensagem,
-            String targetId,
-            boolean exigido
-    ) throws FirebaseMessagingException {
+    // método feito com auxílio do Claude Code e configurado na API Firebase do
+    // Google
+    private int enviarAgora(String idUsuario, String tipo, String titulo, String mensagem, String targetId,
+            boolean exigido) throws FirebaseMessagingException {
+        // pega o cliente do Firebase configurado pelo servidor. é opcional,
+        // ent o método pode só ignorar o envio em ambientes sem configuração.
         FirebaseMessaging firebaseMessaging = firebaseMessagingProvider.getIfAvailable();
         if (firebaseMessaging == null) {
             if (exigido) {
+                // aviso de erro na configuração (é exigido mas n tá configurado)
                 throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
                         "O Firebase não está configurado no servidor");
             }
             log.debug("Push ignorado: Firebase não está habilitado no servidor");
-            return 0;
+            return 0; // só pra voltar
         }
 
+        // busca todos os aparelhos associados ao usuário, pq uma mesma conta pode
+        // estar conectada em mais de um dispositivo.
         List<DispositivoPush> dispositivos = dispositivoRepository.findAllByUsuario_Id(idUsuario);
         if (dispositivos.isEmpty()) {
             if (exigido) {
+                // O envio só pd acontecer se tiver dispositivo válido registrado
+                // tem um método q registra dispositivo novo e é chamado quando faz login
+                // ou quando o app recebe um novo token do firebase
                 throw new ResponseStatusException(HttpStatus.CONFLICT,
                         "Este celular ainda não está registrado para receber notificações push");
             }
             return 0;
         }
 
+        // monta a mensagem do Firebase para cada token de dispositivo
+        // encontrado.
         List<Message> mensagens = dispositivos.stream()
                 .map(dispositivo -> montarMensagem(dispositivo.getToken(), tipo, titulo, mensagem, targetId))
                 .toList();
+
+        // envia todas as mensagens pelo firebase e recebe o resultado individual de
+        // cada tentativa.
         BatchResponse resposta = firebaseMessaging.sendEach(mensagens);
+
         removerTokensInvalidos(dispositivos, resposta.getResponses());
+
+        // mostra quantos dispositivos confirmaram o recebimento pelo Firebase.
         return resposta.getSuccessCount();
     }
 
@@ -141,7 +153,8 @@ public class NotificacaoPushService {
                         .build())
                 .putData("tipo", tipo == null ? "" : tipo);
 
-        if (targetId != null) builder.putData("targetId", targetId);
+        if (targetId != null)
+            builder.putData("targetId", targetId);
         return builder.build();
     }
 
@@ -149,20 +162,23 @@ public class NotificacaoPushService {
         List<DispositivoPush> invalidos = new ArrayList<>();
         for (int i = 0; i < respostas.size(); i++) {
             SendResponse resposta = respostas.get(i);
-            if (resposta.isSuccessful() || resposta.getException() == null) continue;
+            if (resposta.isSuccessful() || resposta.getException() == null)
+                continue;
 
             MessagingErrorCode codigo = resposta.getException().getMessagingErrorCode();
             if (codigo == MessagingErrorCode.UNREGISTERED || codigo == MessagingErrorCode.INVALID_ARGUMENT) {
                 invalidos.add(dispositivos.get(i));
             }
         }
-        if (!invalidos.isEmpty()) dispositivoRepository.deleteAll(invalidos);
+        if (!invalidos.isEmpty())
+            dispositivoRepository.deleteAll(invalidos);
     }
 
     private Usuario usuarioAutenticado() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Object principal = authentication == null ? null : authentication.getPrincipal();
-        if (principal instanceof Usuario usuario) return usuario;
+        if (principal instanceof Usuario usuario)
+            return usuario;
         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado");
     }
 }

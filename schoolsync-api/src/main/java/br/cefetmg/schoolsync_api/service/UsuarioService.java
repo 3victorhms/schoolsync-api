@@ -99,7 +99,8 @@ public class UsuarioService {
                             + ". Transfira as lideranças e reatribua as atividades antes de tentar novamente.");
         }
 
-        // Preserva comentários, histórico e integridade referencial para auditoria.
+        // ainda deixa os comentários, histórico e etc, porém alterando o nome para
+        // Usuário inativo
         usuario.setAtivo(false);
         usuario.setNome("Usuário inativo");
         usuario.setFoto(null);

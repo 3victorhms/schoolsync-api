@@ -35,8 +35,8 @@ public class JwtService {
         // número grande (por exemplo, 1789441200).
         // https://hkotsubo.github.io/blog/2019-05-02/o-que-e-timestamp
 
-        // o trecho abaixo foi feito com auxílio da AI Codex e comentado por
-        // victorhmsdev
+        // o trecho abaixo foi feito com auxílio da AI Codex
+
         // 1. Define o cabeçalho do padrão JWT (Algoritmo HMAC-SHA256 e tipo do arquivo)
         String header = "{\"alg\":\"HS256\",\"typ\":\"JWT\"}";
 

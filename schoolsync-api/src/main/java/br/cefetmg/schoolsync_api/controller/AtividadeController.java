@@ -28,6 +28,7 @@ public class AtividadeController {
             @Valid @RequestBody AtividadeRequestDTO dto
     ) {
         usuarioAtual.validar(dto.getIdCriador());
+        atividadeService.validarMembroDaSala(dto.getIdSala(), usuarioAtual.id());
         AtividadeResponseDTO atividade = atividadeService.criar(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(atividade);
     }
@@ -47,6 +48,7 @@ public class AtividadeController {
             @RequestParam String idUsuarioLogado
     ) {
         usuarioAtual.validar(idUsuarioLogado);
+        atividadeService.validarAcessoAtividade(id, idUsuarioLogado);
         return ResponseEntity.ok(
                 atividadeService.buscarPorId(id, idUsuarioLogado)
         );
@@ -54,6 +56,7 @@ public class AtividadeController {
 
     @GetMapping("/sala/{idSala}")
     public ResponseEntity<List<AtividadeResponseDTO>> listarPorSala(@PathVariable String idSala) {
+        atividadeService.validarMembroDaSala(idSala, usuarioAtual.id());
         return ResponseEntity.ok(atividadeService.listarPorSala(idSala));
     }
 
@@ -83,6 +86,7 @@ public class AtividadeController {
             @RequestParam String idUsuario
     ) {
         usuarioAtual.validar(idUsuario);
+        atividadeService.validarAcessoAtividade(idAtividade, idUsuario);
         atividadeService.adicionarNoCaderno(idAtividade, idUsuario);
         return ResponseEntity.noContent().build();
     }
