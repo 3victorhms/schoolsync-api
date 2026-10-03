@@ -72,28 +72,25 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.verificarLogin(email));
     }
 
-    @PutMapping("/{id}")
-    @Operation(summary = "Atualizar usuário")
-    public ResponseEntity<UsuarioResponseDTO> atualizar(@PathVariable String id, @Valid @RequestBody UsuarioRequestDTO usuarioRequestDTO) {
-        usuarioAtual.validar(id);
-        UsuarioResponseDTO usuarioResponseDTO = usuarioService.update(id, usuarioRequestDTO);
+    // As rotas de alteração usam "/me": a conta alterada é sempre a do token.
+
+    @PutMapping("/me")
+    @Operation(summary = "Atualizar os dados do usuário logado")
+    public ResponseEntity<UsuarioResponseDTO> atualizar(@Valid @RequestBody UsuarioRequestDTO usuarioRequestDTO) {
+        UsuarioResponseDTO usuarioResponseDTO = usuarioService.update(usuarioAtual.id(), usuarioRequestDTO);
         return ResponseEntity.ok(usuarioResponseDTO);
     }
 
-    @PatchMapping("/{id}/imagem")
-    @Operation(summary = "Enviar foto de perfil (Data URI em Base64)")
-    public ResponseEntity<UsuarioResponseDTO> atualizarImagem(
-            @PathVariable String id,
-            @Valid @RequestBody ImagemUsuarioDTO dto) {
-        usuarioAtual.validar(id);
-        return ResponseEntity.ok(usuarioService.atualizarImagem(id, dto.getImagemBase64()));
+    @PatchMapping("/me/imagem")
+    @Operation(summary = "Enviar foto de perfil do usuário logado (Data URI em Base64)")
+    public ResponseEntity<UsuarioResponseDTO> atualizarImagem(@Valid @RequestBody ImagemUsuarioDTO dto) {
+        return ResponseEntity.ok(usuarioService.atualizarImagem(usuarioAtual.id(), dto.getImagemBase64()));
     }
 
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Excluir usuário")
-    public ResponseEntity<Void> excluir(@PathVariable String id) {
-        usuarioAtual.validar(id);
-        usuarioService.delete(id);
+    @DeleteMapping("/me")
+    @Operation(summary = "Desativar a conta do usuário logado")
+    public ResponseEntity<Void> excluir() {
+        usuarioService.delete(usuarioAtual.id());
         return ResponseEntity.noContent().build();
     }
 }

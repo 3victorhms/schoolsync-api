@@ -15,7 +15,4 @@ public class GrupoRequestDTO {
 
     @NotBlank
     private String idSala;
-
-    @NotBlank
-    private String idCriador;
 }

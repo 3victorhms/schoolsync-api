@@ -34,8 +34,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/usuarios", "/usuarios/autenticar").permitAll()
                         .requestMatchers(HttpMethod.GET, "/usuarios/verificar-login").permitAll()
                         // O stream fica liberado aqui só para não quebrar o envio assíncrono do SSE;
-                        // quem valida é o controller (token da URL precisa ser do mesmo usuário).
-                        .requestMatchers(HttpMethod.GET, "/notificacoes/usuario/*/stream").permitAll()
+                        // sem token válido na URL o controller responde 401 (UsuarioAtual).
+                        .requestMatchers(HttpMethod.GET, "/notificacoes/stream").permitAll()
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",

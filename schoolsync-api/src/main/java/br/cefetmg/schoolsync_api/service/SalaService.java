@@ -25,6 +25,7 @@ import br.cefetmg.schoolsync_api.entity.Atividade;
 import br.cefetmg.schoolsync_api.entity.Caderno;
 import br.cefetmg.schoolsync_api.entity.Materia;
 import br.cefetmg.schoolsync_api.entity.Membros;
+import br.cefetmg.schoolsync_api.entity.Nota;
 import br.cefetmg.schoolsync_api.entity.Periodo;
 import br.cefetmg.schoolsync_api.entity.Sala;
 import br.cefetmg.schoolsync_api.entity.TipoPeriodo;
@@ -32,6 +33,7 @@ import br.cefetmg.schoolsync_api.entity.Usuario;
 import br.cefetmg.schoolsync_api.repository.AtividadeRepository;
 import br.cefetmg.schoolsync_api.repository.CadernoRepository;
 import br.cefetmg.schoolsync_api.repository.MembrosRepository;
+import br.cefetmg.schoolsync_api.repository.NotaRepository;
 import br.cefetmg.schoolsync_api.repository.SalaRepository;
 import br.cefetmg.schoolsync_api.repository.UsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -49,6 +51,7 @@ public class SalaService {
     private final MembrosRepository membrosRepository;
     private final CadernoRepository cadernoRepository;
     private final AtividadeRepository atividadeRepository;
+    private final NotaRepository notaRepository;
     private final GrupoService grupoService;
 
     @Transactional
@@ -132,6 +135,11 @@ public class SalaService {
                             "Não é possível remover " + existente.getNome()
                                     + ": já existem atividades cadastradas nessa matéria");
                 }
+                if (notaRepository.existsByMateria_Id(existente.getId())) {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT,
+                            "Não é possível remover " + existente.getNome()
+                                    + ": alunos já lançaram notas nessa matéria no boletim");
+                }
                 sala.getMaterias().remove(existente);
             }
         }
@@ -155,11 +163,11 @@ public class SalaService {
         validarPeriodos(tipo, periodosDto);
 
         boolean mudouTipo = sala.getTipoPeriodo() != null && sala.getTipoPeriodo() != tipo;
-        if (mudouTipo && !sala.getAtividades().isEmpty()) {
+        if (mudouTipo && (!sala.getAtividades().isEmpty() || notaRepository.existsBySala_IdAndAtividadeIsNull(sala.getId()))) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Não é possível trocar de " + sala.getTipoPeriodo().getRotulo().toLowerCase(Locale.ROOT)
                             + " para " + tipo.getRotulo().toLowerCase(Locale.ROOT)
-                            + " com atividades já cadastradas na sala");
+                            + " com atividades ou notas já cadastradas na sala");
         }
 
         sala.setTipoPeriodo(tipo);
@@ -232,6 +240,19 @@ public class SalaService {
             String chave = atividade.getMateria().getId() + "|" + periodo.getOrdem();
             somaPorMateriaEPeriodo.merge(chave, atividade.getValor(), Double::sum);
             periodoPorChave.put(chave, periodo);
+        }
+
+        // Boletim: notas de atividade seguem a atividade; avulsas são reencaixadas pela data
+        for (Nota nota : notaRepository.findBySala_Id(sala.getId())) {
+            if (!nota.isAvulsa()) {
+                nota.setPeriodo(nota.getAtividade().getPeriodo());
+                continue;
+            }
+            Periodo periodoDaNota = sala.periodoDaData(nota.getData())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                            "Uma nota avulsa lançada por um aluno (data " + nota.getData().format(DATA_BR)
+                                    + ") ficaria fora dos períodos letivos"));
+            nota.setPeriodo(periodoDaNota);
         }
 
         for (Map.Entry<String, Double> soma : somaPorMateriaEPeriodo.entrySet()) {
@@ -314,6 +335,8 @@ public class SalaService {
         Sala sala = salaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
 
+        // As notas do boletim apontam para atividades, matérias e períodos: saem primeiro
+        notaRepository.deleteBySala(sala.getId());
         salaRepository.delete(sala);
     }
 
@@ -323,11 +346,11 @@ public class SalaService {
                 .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
 
         if (!sala.getLider().getId().equals(idUsuarioLogado)) {
-            throw new IllegalArgumentException("Apenas o lider da sala pode remover membros");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas o líder da sala pode remover membros");
         }
 
         if (sala.getLider().getId().equals(idUsuarioRemover)) {
-            throw new IllegalArgumentException("O lider da sala nao pode ser removido");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "O líder da sala não pode ser removido");
         }
 
         removerVinculoDoUsuario(sala, idUsuarioRemover);
@@ -339,7 +362,7 @@ public class SalaService {
                 .orElseThrow(() -> new EntityNotFoundException("Sala não encontrada"));
 
         if (sala.getLider().getId().equals(idUsuario)) {
-            throw new IllegalArgumentException("O lider da sala não pode sair da sala");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "O líder da sala não pode sair da sala");
         }
 
         removerVinculoDoUsuario(sala, idUsuario);
@@ -353,6 +376,9 @@ public class SalaService {
         cadernoRepository.deleteAll(
                 cadernoRepository.findByAtividade_Sala_IdAndUsuario_Id(sala.getId(), idUsuario)
         );
+
+        // O boletim é por sala: quem sai leva junto (apaga) as próprias notas dela
+        notaRepository.deleteBySalaAndUsuario(sala.getId(), idUsuario);
 
         // Quem sai da sala sai também dos grupos dela (tarefas vão para o líder do grupo).
         grupoService.removerUsuarioDosGruposDaSala(sala.getId(), idUsuario);

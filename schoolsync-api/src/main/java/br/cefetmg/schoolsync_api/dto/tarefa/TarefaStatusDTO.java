@@ -10,7 +10,4 @@ public class TarefaStatusDTO {
 
     @NotBlank
     private String status;
-
-    @NotBlank
-    private String idUsuarioLogado;
 }

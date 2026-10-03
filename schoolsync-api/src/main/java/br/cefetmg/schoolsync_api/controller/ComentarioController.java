@@ -1,6 +1,5 @@
 package br.cefetmg.schoolsync_api.controller;
 
-import br.cefetmg.schoolsync_api.security.UsuarioAtual;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -12,12 +11,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.cefetmg.schoolsync_api.dto.comentario.ComentarioRequestDTO;
 import br.cefetmg.schoolsync_api.dto.comentario.ComentarioResponseDTO;
 import br.cefetmg.schoolsync_api.dto.comentario.ComentarioUpdateDTO;
+import br.cefetmg.schoolsync_api.security.UsuarioAtual;
 import br.cefetmg.schoolsync_api.service.AtividadeService;
 import br.cefetmg.schoolsync_api.service.ComentarioService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -35,9 +34,7 @@ public class ComentarioController {
     private final UsuarioAtual usuarioAtual;
 
     @GetMapping("/atividades/{idAtividade}/comentarios")
-    public ResponseEntity<List<ComentarioResponseDTO>> listarPorAtividade(
-            @PathVariable String idAtividade
-    ) {
+    public ResponseEntity<List<ComentarioResponseDTO>> listarPorAtividade(@PathVariable String idAtividade) {
         atividadeService.validarAcessoAtividade(idAtividade, usuarioAtual.id());
         return ResponseEntity.ok(comentarioService.listarPorAtividade(idAtividade));
     }
@@ -47,11 +44,11 @@ public class ComentarioController {
             @PathVariable String idAtividade,
             @Valid @RequestBody ComentarioRequestDTO dto
     ) {
-        usuarioAtual.validar(dto.getIdUsuario());
-        atividadeService.validarAcessoAtividade(idAtividade, usuarioAtual.id());
+        String idUsuario = usuarioAtual.id();
+        atividadeService.validarAcessoAtividade(idAtividade, idUsuario);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(comentarioService.criar(idAtividade, dto));
+                .body(comentarioService.criar(idAtividade, dto, idUsuario));
     }
 
     @PutMapping("/comentarios/{idComentario}")
@@ -59,17 +56,12 @@ public class ComentarioController {
             @PathVariable String idComentario,
             @Valid @RequestBody ComentarioUpdateDTO dto
     ) {
-        usuarioAtual.validar(dto.getIdUsuario());
-        return ResponseEntity.ok(comentarioService.atualizar(idComentario, dto));
+        return ResponseEntity.ok(comentarioService.atualizar(idComentario, dto, usuarioAtual.id()));
     }
 
     @DeleteMapping("/comentarios/{idComentario}")
-    public ResponseEntity<Void> excluir(
-            @PathVariable String idComentario,
-            @RequestParam String idUsuario
-    ) {
-        usuarioAtual.validar(idUsuario);
-        comentarioService.excluir(idComentario, idUsuario);
+    public ResponseEntity<Void> excluir(@PathVariable String idComentario) {
+        comentarioService.excluir(idComentario, usuarioAtual.id());
         return ResponseEntity.noContent().build();
     }
 }

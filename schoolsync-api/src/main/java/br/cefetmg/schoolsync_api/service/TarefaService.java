@@ -1,5 +1,7 @@
 package br.cefetmg.schoolsync_api.service;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,19 +33,19 @@ public class TarefaService {
     private final NotificacaoService notificacaoService;
 
     @Transactional
-    public TarefaResponseDTO criar(String idGrupo, TarefaRequestDTO dto) {
+    public TarefaResponseDTO criar(String idGrupo, TarefaRequestDTO dto, String idUsuarioLogado) {
         Grupo grupo = grupoService.buscarGrupo(idGrupo);
-        grupoService.validarCriadorDoGrupo(grupo, dto.getIdUsuarioLogado());
+        grupoService.validarCriadorDoGrupo(grupo, idUsuarioLogado);
         grupoService.validarMembroDoGrupo(grupo.getId(), dto.getIdUsuarioAtribuido());
 
         Atividade atividade = atividadeRepository.findById(dto.getIdAtividade())
                 .orElseThrow(() -> new EntityNotFoundException("Atividade nao encontrada"));
 
         if (!atividade.getSala().getId().equals(grupo.getSala().getId())) {
-            throw new IllegalArgumentException("Atividade nao pertence a sala do grupo");
+            throw new IllegalArgumentException("A atividade não pertence à sala do grupo");
         }
 
-        Usuario usuarioLogado = usuarioRepository.findById(dto.getIdUsuarioLogado())
+        Usuario usuarioLogado = usuarioRepository.findById(idUsuarioLogado)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario logado nao encontrado"));
 
         Usuario usuarioAtribuido = usuarioRepository.findById(dto.getIdUsuarioAtribuido())
@@ -97,14 +99,14 @@ public class TarefaService {
     }
 
     @Transactional
-    public TarefaResponseDTO alterarStatus(String idTarefa, TarefaStatusDTO dto) {
+    public TarefaResponseDTO alterarStatus(String idTarefa, TarefaStatusDTO dto, String idUsuarioLogado) {
         Tarefa tarefa = buscarTarefa(idTarefa);
 
-        boolean usuarioAtribuido = tarefa.getAtribuidoPara().getId().equals(dto.getIdUsuarioLogado());
-        boolean criadorGrupo = tarefa.getGrupo().getCriador().getId().equals(dto.getIdUsuarioLogado());
+        boolean usuarioAtribuido = tarefa.getAtribuidoPara().getId().equals(idUsuarioLogado);
+        boolean criadorGrupo = tarefa.getGrupo().getCriador().getId().equals(idUsuarioLogado);
 
         if (!usuarioAtribuido && !criadorGrupo) {
-            throw new IllegalArgumentException("Usuario nao pode alterar esta tarefa");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Só quem recebeu a tarefa ou o criador do grupo pode alterá-la");
         }
 
         tarefa.setStatus(dto.getStatus());

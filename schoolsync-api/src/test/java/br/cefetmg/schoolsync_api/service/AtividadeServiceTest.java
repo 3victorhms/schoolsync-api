@@ -43,6 +43,7 @@ class AtividadeServiceTest {
     @Mock private CadernoRepository cadernoRepository;
     @Mock private MembrosRepository membrosRepository;
     @Mock private NotificacaoService notificacaoService;
+    @Mock private NotaService notaService;
     @InjectMocks private AtividadeService atividadeService;
 
     private Sala sala;
@@ -80,7 +81,6 @@ class AtividadeServiceTest {
     private AtividadeRequestDTO novaAtividade(String idMateria, LocalDate dataEntrega, double valor) {
         AtividadeRequestDTO dto = new AtividadeRequestDTO();
         dto.setIdSala("sala-1");
-        dto.setIdCriador("usuario-1");
         dto.setIdMateria(idMateria);
         dto.setTitulo("Prova");
         dto.setDataEntrega(dataEntrega);
@@ -107,7 +107,7 @@ class AtividadeServiceTest {
                 .thenReturn(List.of(atividadeExistente(20d)));
 
         ResponseStatusException erro = assertThrows(ResponseStatusException.class,
-                () -> atividadeService.criar(novaAtividade("materia-1", LocalDate.of(2027, 3, 10), 10d)));
+                () -> atividadeService.criar(novaAtividade("materia-1", LocalDate.of(2027, 3, 10), 10d), "usuario-1"));
 
         assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, erro.getStatusCode());
         verify(atividadeRepository, never()).save(any());
@@ -121,7 +121,7 @@ class AtividadeServiceTest {
         when(atividadeRepository.save(any(Atividade.class))).thenAnswer(invocacao -> invocacao.getArgument(0));
         when(membrosRepository.findBySala_Id("sala-1")).thenReturn(List.of());
 
-        AtividadeResponseDTO criada = atividadeService.criar(novaAtividade("materia-1", LocalDate.of(2027, 3, 10), 10d));
+        AtividadeResponseDTO criada = atividadeService.criar(novaAtividade("materia-1", LocalDate.of(2027, 3, 10), 10d), "usuario-1");
 
         assertEquals("materia-1", criada.getIdMateria());
         assertEquals("periodo-1", criada.getIdPeriodo());
@@ -133,7 +133,7 @@ class AtividadeServiceTest {
         prepararSalaEUsuario();
 
         ResponseStatusException erro = assertThrows(ResponseStatusException.class,
-                () -> atividadeService.criar(novaAtividade("materia-1", LocalDate.of(2027, 7, 15), 5d)));
+                () -> atividadeService.criar(novaAtividade("materia-1", LocalDate.of(2027, 7, 15), 5d), "usuario-1"));
 
         assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, erro.getStatusCode());
         verify(atividadeRepository, never()).save(any());
@@ -144,7 +144,7 @@ class AtividadeServiceTest {
         prepararSalaEUsuario();
 
         ResponseStatusException erro = assertThrows(ResponseStatusException.class,
-                () -> atividadeService.criar(novaAtividade("materia-de-outra-sala", LocalDate.of(2027, 3, 10), 5d)));
+                () -> atividadeService.criar(novaAtividade("materia-de-outra-sala", LocalDate.of(2027, 3, 10), 5d), "usuario-1"));
 
         assertEquals(HttpStatus.BAD_REQUEST, erro.getStatusCode());
         verify(atividadeRepository, never()).save(any());

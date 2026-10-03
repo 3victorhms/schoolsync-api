@@ -53,7 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private boolean ehStreamDeNotificacoes(HttpServletRequest request) {
         return "GET".equals(request.getMethod())
-                && request.getRequestURI().matches(".*/notificacoes/usuario/[^/]+/stream$");
+                && request.getRequestURI().endsWith("/notificacoes/stream");
     }
 
     private void autenticar(Usuario usuario) {

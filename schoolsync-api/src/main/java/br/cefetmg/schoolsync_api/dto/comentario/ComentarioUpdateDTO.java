@@ -12,7 +12,4 @@ public class ComentarioUpdateDTO {
     @NotBlank
     @Size(max = 1000)
     private String texto;
-
-    @NotBlank
-    private String idUsuario;
 }
