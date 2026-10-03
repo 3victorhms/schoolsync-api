@@ -1,6 +1,8 @@
 package br.cefetmg.schoolsync_api.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -12,7 +14,9 @@ import br.cefetmg.schoolsync_api.dto.atividade.AtividadeRequestDTO;
 import br.cefetmg.schoolsync_api.dto.atividade.AtividadeResponseDTO;
 import br.cefetmg.schoolsync_api.entity.Atividade;
 import br.cefetmg.schoolsync_api.entity.Caderno;
+import br.cefetmg.schoolsync_api.entity.Materia;
 import br.cefetmg.schoolsync_api.entity.Membros;
+import br.cefetmg.schoolsync_api.entity.Periodo;
 import br.cefetmg.schoolsync_api.entity.Sala;
 import br.cefetmg.schoolsync_api.entity.Usuario;
 import br.cefetmg.schoolsync_api.repository.AtividadeRepository;
@@ -30,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 public class AtividadeService {
 
     private static final double VALOR_MAXIMO_POR_ATIVIDADE = 15d;
+    private static final DateTimeFormatter DATA_BR = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private final AtividadeRepository atividadeRepository;
     private final SalaRepository salaRepository;
@@ -46,12 +51,15 @@ public class AtividadeService {
         Usuario criador = usuarioRepository.findById(dto.getIdCriador())
                 .orElseThrow(() -> new EntityNotFoundException("Usuario nao encontrado"));
 
-        validarPontuacao(sala.getId(), dto.getDisciplina(), dto.getValor(), null);
+        Materia materia = buscarMateriaDaSala(sala, dto.getIdMateria());
+        Periodo periodo = buscarPeriodoDaData(sala, dto.getDataEntrega());
+        validarPontuacao(materia, periodo, dto.getValor(), null);
 
         Atividade atividade = new Atividade();
         atividade.setTitulo(dto.getTitulo());
         atividade.setDescricao(dto.getDescricao());
-        atividade.setDisciplina(dto.getDisciplina().trim());
+        atividade.setMateria(materia);
+        atividade.setPeriodo(periodo);
         atividade.setDataEntrega(dto.getDataEntrega());
         atividade.setValor(dto.getValor());
         atividade.setSala(sala);
@@ -96,11 +104,14 @@ public class AtividadeService {
 
         Sala sala = salaRepository.findByIdForUpdate(atividade.getSala().getId())
                 .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
-        validarPontuacao(sala.getId(), dto.getDisciplina(), dto.getValor(), id);
+        Materia materia = buscarMateriaDaSala(sala, dto.getIdMateria());
+        Periodo periodo = buscarPeriodoDaData(sala, dto.getDataEntrega());
+        validarPontuacao(materia, periodo, dto.getValor(), id);
 
         atividade.setTitulo(dto.getTitulo());
         atividade.setDescricao(dto.getDescricao());
-        atividade.setDisciplina(dto.getDisciplina().trim());
+        atividade.setMateria(materia);
+        atividade.setPeriodo(periodo);
         atividade.setDataEntrega(dto.getDataEntrega());
         atividade.setValor(dto.getValor());
 
@@ -111,7 +122,27 @@ public class AtividadeService {
         return new AtividadeResponseDTO(atividadeAtualizada);
     }
 
-    private void validarPontuacao(String idSala, String disciplina, Double novoValor, String idIgnorado) {
+    private Materia buscarMateriaDaSala(Sala sala, String idMateria) {
+        return sala.getMaterias().stream()
+                .filter(materia -> materia.getId().equals(idMateria))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Escolha uma das matérias cadastradas nesta sala"));
+    }
+
+    /** O período sai da data de entrega; fora do ano letivo da sala a atividade é recusada. */
+    private Periodo buscarPeriodoDaData(Sala sala, LocalDate dataEntrega) {
+        return sala.periodoDaData(dataEntrega)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                        "A data de entrega " + (dataEntrega == null ? "" : dataEntrega.format(DATA_BR) + " ")
+                                + "está fora dos períodos letivos da sala"));
+    }
+
+    /**
+     * v2: a soma dos valores das atividades de uma matéria dentro de um período
+     * não pode passar da pontuação máxima daquele período (ex.: 25 pts no 1º bimestre).
+     */
+    private void validarPontuacao(Materia materia, Periodo periodo, Double novoValor, String idIgnorado) {
         if (novoValor == null || novoValor < 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O valor da atividade não pode ser negativo");
         }
@@ -121,21 +152,17 @@ public class AtividadeService {
                     "O valor máximo de uma atividade é 15 pontos");
         }
 
-        String disciplinaNormalizada = disciplina == null ? "" : disciplina.trim();
-        if (disciplinaNormalizada.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A disciplina é obrigatória");
-        }
-
-        double utilizado = atividadeRepository.findBySala_IdAndDisciplinaIgnoreCase(idSala, disciplinaNormalizada).stream()
+        double utilizado = atividadeRepository.findByMateria_IdAndPeriodo_Id(materia.getId(), periodo.getId()).stream()
                 .filter(atividade -> idIgnorado == null || !atividade.getId().equals(idIgnorado))
                 .mapToDouble(Atividade::getValor)
                 .sum();
-        double disponivel = Math.max(0, 100 - utilizado);
+        double maximo = periodo.getPontuacaoMaxima();
+        double disponivel = Math.max(0, maximo - utilizado);
 
-        if (utilizado + novoValor > 100 + 0.000001d) {
+        if (utilizado + novoValor > maximo + 0.000001d) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-                    String.format("Pontuação máxima de 100 pontos excedida para %s. Já utilizados: %.2f; disponíveis: %.2f; valor informado: %.2f.",
-                            disciplinaNormalizada, utilizado, disponivel, novoValor));
+                    String.format("Pontuação máxima de %.2f pontos excedida para %s no %s. Já utilizados: %.2f; disponíveis: %.2f; valor informado: %.2f.",
+                            maximo, materia.getNome(), periodo.getNome(), utilizado, disponivel, novoValor));
         }
     }
 

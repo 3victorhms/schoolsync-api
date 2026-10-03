@@ -15,7 +15,7 @@ public class TarefaResponseDTO {
     private String idGrupo;
     private String idAtividade;
     private String tituloAtividade;
-    private String disciplinaAtividade;
+    private String materiaAtividade;
     private String idUsuarioAtribuido;
     private String nomeUsuarioAtribuido;
     private String idCriador;
@@ -29,7 +29,7 @@ public class TarefaResponseDTO {
         this.idGrupo = tarefa.getGrupo().getId();
         this.idAtividade = tarefa.getAtividade().getId();
         this.tituloAtividade = tarefa.getAtividade().getTitulo();
-        this.disciplinaAtividade = tarefa.getAtividade().getDisciplina();
+        this.materiaAtividade = tarefa.getAtividade().getMateria().getNome();
         this.idUsuarioAtribuido = tarefa.getAtribuidoPara().getId();
         this.nomeUsuarioAtribuido = tarefa.getAtribuidoPara().getNome();
         this.idCriador = tarefa.getCriadaPor().getId();

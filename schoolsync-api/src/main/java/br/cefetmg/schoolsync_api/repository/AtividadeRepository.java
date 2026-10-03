@@ -10,5 +10,8 @@ public interface AtividadeRepository extends JpaRepository<Atividade, String> {
 
     List<Atividade> findBySala_Id(String idSala);
 
-    List<Atividade> findBySala_IdAndDisciplinaIgnoreCase(String idSala, String disciplina);
+    /** Atividades de uma matéria dentro de um período: base do limite de pontuação. */
+    List<Atividade> findByMateria_IdAndPeriodo_Id(String idMateria, String idPeriodo);
+
+    boolean existsByMateria_Id(String idMateria);
 }
