@@ -40,8 +40,15 @@ public class Atividade {
     @Column(length = 1000)
     private String descricao;
 
-    @Column(nullable = false, length = 100)
-    private String disciplina;
+    /** v2: a atividade aponta para uma matéria cadastrada pelo líder (antes era texto livre). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_materia", nullable = false)
+    private Materia materia;
+
+    /** Calculado pela data de entrega: é o período da sala em que ela cai. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_periodo", nullable = false)
+    private Periodo periodo;
 
     @Column(name = "data_entrega", nullable = false)
     private LocalDate dataEntrega;

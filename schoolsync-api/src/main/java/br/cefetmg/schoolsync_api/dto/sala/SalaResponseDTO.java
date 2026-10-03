@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import br.cefetmg.schoolsync_api.entity.Sala;
+import br.cefetmg.schoolsync_api.entity.TipoPeriodo;
 import lombok.Getter;
 
 @Getter
@@ -14,6 +15,9 @@ public class SalaResponseDTO {
     private String nome;
     private String codigoConvite;
     private String idLider;
+    private TipoPeriodo tipoPeriodo;
+    private List<MateriaResponseDTO> materias;
+    private List<PeriodoResponseDTO> periodos;
     private List<MembrosResponseDTO> membros;
     private List<AtividadeResumo> atividades;
 
@@ -22,6 +26,15 @@ public class SalaResponseDTO {
         this.nome = sala.getNome();
         this.codigoConvite = sala.getCodigoConvite();
         this.idLider = sala.getLider().getId();
+        this.tipoPeriodo = sala.getTipoPeriodo();
+
+        this.materias = sala.getMaterias().stream()
+                .map(MateriaResponseDTO::new)
+                .collect(Collectors.toList());
+
+        this.periodos = sala.getPeriodos().stream()
+                .map(PeriodoResponseDTO::new)
+                .collect(Collectors.toList());
 
         this.membros = sala.getMembros().stream()
                 .map(MembrosResponseDTO::new)
@@ -34,7 +47,10 @@ public class SalaResponseDTO {
                             a.getId(),
                             a.getTitulo(),
                             a.getDescricao(),
-                            a.getDisciplina(),
+                            a.getMateria().getId(),
+                            a.getMateria().getNome(),
+                            a.getPeriodo().getId(),
+                            a.getPeriodo().getNome(),
                             a.getDataEntrega(),
                             a.getValor(),
                             status != null,
@@ -48,7 +64,10 @@ public class SalaResponseDTO {
             String id,
             String titulo,
             String descricao,
-            String disciplina,
+            String idMateria,
+            String nomeMateria,
+            String idPeriodo,
+            String nomePeriodo,
             LocalDate dataEntrega,
             Double valor,
             boolean estaNoCaderno,

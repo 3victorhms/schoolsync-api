@@ -1,13 +1,17 @@
 package br.cefetmg.schoolsync_api.entity;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -53,4 +57,23 @@ public class Sala {
 
     @OneToMany(mappedBy = "sala", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Grupo> grupos = new ArrayList<>();
+
+    // ===== v2: matérias e períodos letivos =====
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_periodo", nullable = false, length = 20)
+    private TipoPeriodo tipoPeriodo;
+
+    @OneToMany(mappedBy = "sala", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("nome ASC")
+    private List<Materia> materias = new ArrayList<>();
+
+    @OneToMany(mappedBy = "sala", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("ordem ASC")
+    private List<Periodo> periodos = new ArrayList<>();
+
+    /** Período em que a data cai, se houver (datas fora do ano letivo não têm). */
+    public Optional<Periodo> periodoDaData(LocalDate data) {
+        return periodos.stream().filter(periodo -> periodo.contem(data)).findFirst();
+    }
 }
