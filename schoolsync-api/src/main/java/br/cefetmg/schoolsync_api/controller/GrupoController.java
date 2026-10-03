@@ -1,6 +1,5 @@
 package br.cefetmg.schoolsync_api.controller;
 
-import br.cefetmg.schoolsync_api.security.UsuarioAtual;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -21,6 +20,7 @@ import br.cefetmg.schoolsync_api.dto.grupo.GrupoResumoDTO;
 import br.cefetmg.schoolsync_api.dto.tarefa.TarefaRequestDTO;
 import br.cefetmg.schoolsync_api.dto.tarefa.TarefaResponseDTO;
 import br.cefetmg.schoolsync_api.dto.tarefa.TarefaStatusDTO;
+import br.cefetmg.schoolsync_api.security.UsuarioAtual;
 import br.cefetmg.schoolsync_api.service.GrupoService;
 import br.cefetmg.schoolsync_api.service.TarefaService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -39,35 +39,23 @@ public class GrupoController {
 
     @PostMapping("/grupos")
     public ResponseEntity<GrupoResponseDTO> criar(@Valid @RequestBody GrupoRequestDTO dto) {
-        usuarioAtual.validar(dto.getIdCriador());
-        return ResponseEntity.status(HttpStatus.CREATED).body(grupoService.criar(dto));
+        return ResponseEntity.status(HttpStatus.CREATED).body(grupoService.criar(dto, usuarioAtual.id()));
     }
 
     @PostMapping("/grupos/entrar")
-    public ResponseEntity<GrupoResponseDTO> entrar(
-            @RequestParam String codigoConvite,
-            @RequestParam String idUsuario
-    ) {
-        usuarioAtual.validar(idUsuario);
-        return ResponseEntity.ok(grupoService.entrar(codigoConvite, idUsuario));
+    public ResponseEntity<GrupoResponseDTO> entrar(@RequestParam String codigoConvite) {
+        return ResponseEntity.ok(grupoService.entrar(codigoConvite, usuarioAtual.id()));
     }
 
     @GetMapping("/grupos/{idGrupo}")
-    public ResponseEntity<GrupoResponseDTO> buscarPorId(
-            @PathVariable String idGrupo,
-            @RequestParam String idUsuarioLogado
-    ) {
-        usuarioAtual.validar(idUsuarioLogado);
-        return ResponseEntity.ok(grupoService.buscarPorId(idGrupo, idUsuarioLogado));
+    public ResponseEntity<GrupoResponseDTO> buscarPorId(@PathVariable String idGrupo) {
+        return ResponseEntity.ok(grupoService.buscarPorId(idGrupo, usuarioAtual.id()));
     }
 
-    @GetMapping("/salas/{idSala}/grupos/usuario/{idUsuario}")
-    public ResponseEntity<List<GrupoResumoDTO>> listarPorSalaEUsuario(
-            @PathVariable String idSala,
-            @PathVariable String idUsuario
-    ) {
-        usuarioAtual.validar(idUsuario);
-        return ResponseEntity.ok(grupoService.listarPorSalaEUsuario(idSala, idUsuario));
+    /** Grupos do usuário logado dentro da sala. */
+    @GetMapping("/salas/{idSala}/grupos")
+    public ResponseEntity<List<GrupoResumoDTO>> listarMeusGruposDaSala(@PathVariable String idSala) {
+        return ResponseEntity.ok(grupoService.listarPorSalaEUsuario(idSala, usuarioAtual.id()));
     }
 
     @PutMapping("/grupos/{idGrupo}")
@@ -75,56 +63,39 @@ public class GrupoController {
             @PathVariable String idGrupo,
             @Valid @RequestBody GrupoRequestDTO dto
     ) {
-        usuarioAtual.validar(dto.getIdCriador());
-        return ResponseEntity.ok(grupoService.atualizar(idGrupo, dto));
+        return ResponseEntity.ok(grupoService.atualizar(idGrupo, dto, usuarioAtual.id()));
     }
 
     @DeleteMapping("/grupos/{idGrupo}")
-    public ResponseEntity<Void> excluir(
-            @PathVariable String idGrupo,
-            @RequestParam String idUsuarioLogado
-    ) {
-        usuarioAtual.validar(idUsuarioLogado);
-        grupoService.excluir(idGrupo, idUsuarioLogado);
+    public ResponseEntity<Void> excluir(@PathVariable String idGrupo) {
+        grupoService.excluir(idGrupo, usuarioAtual.id());
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/grupos/{idGrupo}/membros/{idUsuarioRemover}")
     public ResponseEntity<Void> removerMembro(
             @PathVariable String idGrupo,
-            @PathVariable String idUsuarioRemover,
-            @RequestParam String idUsuarioLogado
+            @PathVariable String idUsuarioRemover
     ) {
-        usuarioAtual.validar(idUsuarioLogado);
-        grupoService.removerMembro(idGrupo, idUsuarioRemover, idUsuarioLogado);
+        grupoService.removerMembro(idGrupo, idUsuarioRemover, usuarioAtual.id());
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/grupos/{idGrupo}/sair")
-    public ResponseEntity<Void> sair(
-            @PathVariable String idGrupo,
-            @RequestParam String idUsuario
-    ) {
-        usuarioAtual.validar(idUsuario);
-        grupoService.sair(idGrupo, idUsuario);
+    public ResponseEntity<Void> sair(@PathVariable String idGrupo) {
+        grupoService.sair(idGrupo, usuarioAtual.id());
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/grupos/{idGrupo}/tarefas")
-    public ResponseEntity<List<TarefaResponseDTO>> listarTarefas(
-            @PathVariable String idGrupo,
-            @RequestParam String idUsuarioLogado
-    ) {
-        usuarioAtual.validar(idUsuarioLogado);
-        return ResponseEntity.ok(tarefaService.listarPorGrupo(idGrupo, idUsuarioLogado));
+    public ResponseEntity<List<TarefaResponseDTO>> listarTarefas(@PathVariable String idGrupo) {
+        return ResponseEntity.ok(tarefaService.listarPorGrupo(idGrupo, usuarioAtual.id()));
     }
 
-    @GetMapping("/tarefas/usuario/{idUsuario}")
-    public ResponseEntity<List<TarefaResponseDTO>> listarTarefasPorUsuario(
-            @PathVariable String idUsuario
-    ) {
-        usuarioAtual.validar(idUsuario);
-        return ResponseEntity.ok(tarefaService.listarPorUsuario(idUsuario));
+    /** Tarefas atribuídas ao usuário logado em todos os grupos. */
+    @GetMapping("/tarefas")
+    public ResponseEntity<List<TarefaResponseDTO>> listarMinhasTarefas() {
+        return ResponseEntity.ok(tarefaService.listarPorUsuario(usuarioAtual.id()));
     }
 
     @PostMapping("/grupos/{idGrupo}/tarefas")
@@ -132,8 +103,7 @@ public class GrupoController {
             @PathVariable String idGrupo,
             @Valid @RequestBody TarefaRequestDTO dto
     ) {
-        usuarioAtual.validar(dto.getIdUsuarioLogado());
-        return ResponseEntity.status(HttpStatus.CREATED).body(tarefaService.criar(idGrupo, dto));
+        return ResponseEntity.status(HttpStatus.CREATED).body(tarefaService.criar(idGrupo, dto, usuarioAtual.id()));
     }
 
     @PutMapping("/tarefas/{idTarefa}/status")
@@ -141,17 +111,12 @@ public class GrupoController {
             @PathVariable String idTarefa,
             @Valid @RequestBody TarefaStatusDTO dto
     ) {
-        usuarioAtual.validar(dto.getIdUsuarioLogado());
-        return ResponseEntity.ok(tarefaService.alterarStatus(idTarefa, dto));
+        return ResponseEntity.ok(tarefaService.alterarStatus(idTarefa, dto, usuarioAtual.id()));
     }
 
     @DeleteMapping("/tarefas/{idTarefa}")
-    public ResponseEntity<Void> excluirTarefa(
-            @PathVariable String idTarefa,
-            @RequestParam String idUsuarioLogado
-    ) {
-        usuarioAtual.validar(idUsuarioLogado);
-        tarefaService.excluir(idTarefa, idUsuarioLogado);
+    public ResponseEntity<Void> excluirTarefa(@PathVariable String idTarefa) {
+        tarefaService.excluir(idTarefa, usuarioAtual.id());
         return ResponseEntity.noContent().build();
     }
 }

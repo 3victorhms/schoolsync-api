@@ -1,5 +1,7 @@
 package br.cefetmg.schoolsync_api.service;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,11 +31,11 @@ public class ComentarioService {
     private final NotificacaoService notificacaoService;
 
     @Transactional
-    public ComentarioResponseDTO criar(String idAtividade, ComentarioRequestDTO dto) {
+    public ComentarioResponseDTO criar(String idAtividade, ComentarioRequestDTO dto, String idUsuario) {
         Atividade atividade = atividadeRepository.findById(idAtividade)
                 .orElseThrow(() -> new EntityNotFoundException("Atividade nao encontrada"));
 
-        Usuario usuario = usuarioRepository.findById(dto.getIdUsuario())
+        Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario nao encontrado"));
 
         Comentario comentario = new Comentario();
@@ -47,7 +49,7 @@ public class ComentarioService {
                     .orElseThrow(() -> new EntityNotFoundException("Comentario pai nao encontrado"));
 
             if (!comentarioPai.getAtividade().getId().equals(idAtividade)) {
-                throw new IllegalArgumentException("Comentario pai nao pertence a atividade informada");
+                throw new IllegalArgumentException("O comentário respondido não pertence a esta atividade");
             }
 
             comentario.setComentarioPai(comentarioPai);
@@ -101,11 +103,11 @@ public class ComentarioService {
     }
 
     @Transactional
-    public ComentarioResponseDTO atualizar(String idComentario, ComentarioUpdateDTO dto) {
+    public ComentarioResponseDTO atualizar(String idComentario, ComentarioUpdateDTO dto, String idUsuario) {
         Comentario comentario = comentarioRepository.findById(idComentario)
                 .orElseThrow(() -> new EntityNotFoundException("Comentario nao encontrado"));
 
-        validarAutor(comentario, dto.getIdUsuario());
+        validarAutor(comentario, idUsuario);
 
         comentario.setTexto(dto.getTexto());
 
@@ -124,7 +126,7 @@ public class ComentarioService {
 
     private void validarAutor(Comentario comentario, String idUsuario) {
         if (!comentario.getUsuario().getId().equals(idUsuario)) {
-            throw new IllegalArgumentException("Apenas o autor pode alterar este comentario");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas o autor pode alterar este comentário");
         }
     }
 }

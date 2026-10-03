@@ -18,7 +18,4 @@ public class TarefaRequestDTO {
 
     @NotBlank
     private String idUsuarioAtribuido;
-
-    @NotBlank
-    private String idUsuarioLogado;
 }

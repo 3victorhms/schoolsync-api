@@ -42,13 +42,14 @@ public class AtividadeService {
     private final CadernoRepository cadernoRepository;
     private final MembrosRepository membrosRepository;
     private final NotificacaoService notificacaoService;
+    private final NotaService notaService;
 
     @Transactional
-    public AtividadeResponseDTO criar(AtividadeRequestDTO dto) {
+    public AtividadeResponseDTO criar(AtividadeRequestDTO dto, String idCriador) {
         Sala sala = salaRepository.findByIdForUpdate(dto.getIdSala())
                 .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
 
-        Usuario criador = usuarioRepository.findById(dto.getIdCriador())
+        Usuario criador = usuarioRepository.findById(idCriador)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario nao encontrado"));
 
         Materia materia = buscarMateriaDaSala(sala, dto.getIdMateria());
@@ -116,6 +117,9 @@ public class AtividadeService {
         atividade.setValor(dto.getValor());
 
         Atividade atividadeAtualizada = atividadeRepository.save(atividade);
+
+        // Boletim: as notas lançadas nesta atividade acompanham matéria, período e valor
+        notaService.sincronizarComAtividade(atividadeAtualizada);
 
         notificarAtividadeAtualizada(atividadeAtualizada);
 
@@ -213,6 +217,7 @@ public class AtividadeService {
                 .orElseThrow(() -> new EntityNotFoundException("Atividade nao encontrada"));
 
         notificacaoService.removerPorAlvo(id);
+        notaService.desvincularDaAtividade(atividade);
         atividadeRepository.delete(atividade);
     }
 
@@ -222,7 +227,10 @@ public class AtividadeService {
                 .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
 
         List<Atividade> atividades = new ArrayList<>(sala.getAtividades());
-        atividades.forEach(atividade -> notificacaoService.removerPorAlvo(atividade.getId()));
+        atividades.forEach(atividade -> {
+            notificacaoService.removerPorAlvo(atividade.getId());
+            notaService.desvincularDaAtividade(atividade);
+        });
         atividadeRepository.deleteAll(atividades);
         sala.getAtividades().clear();
     }

@@ -41,11 +41,11 @@ public class GrupoService {
     private final TarefaRepository tarefaRepository;
 
     @Transactional
-    public GrupoResponseDTO criar(GrupoRequestDTO dto) {
+    public GrupoResponseDTO criar(GrupoRequestDTO dto, String idCriador) {
         Sala sala = salaRepository.findById(dto.getIdSala())
                 .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
 
-        Usuario criador = usuarioRepository.findById(dto.getIdCriador())
+        Usuario criador = usuarioRepository.findById(idCriador)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario nao encontrado"));
 
         validarMembroDaSala(sala.getId(), criador.getId());
@@ -79,7 +79,7 @@ public class GrupoService {
         validarMembroDaSala(grupo.getSala().getId(), usuario.getId());
 
         if (grupoMembroRepository.existsByGrupo_IdAndUsuario_Id(grupo.getId(), usuario.getId())) {
-            throw new IllegalArgumentException("Voce ja esta neste grupo");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Você já está neste grupo");
         }
 
         GrupoMembro membro = new GrupoMembro();
@@ -121,16 +121,16 @@ public class GrupoService {
     }
 
     @Transactional
-    public GrupoResponseDTO atualizar(String idGrupo, GrupoRequestDTO dto) {
+    public GrupoResponseDTO atualizar(String idGrupo, GrupoRequestDTO dto, String idUsuarioLogado) {
         Grupo grupo = buscarGrupo(idGrupo);
 
-        if (!grupo.getCriador().getId().equals(dto.getIdCriador())) {
-            throw new IllegalArgumentException("Apenas o criador do grupo pode atualizar o grupo");
+        if (!grupo.getCriador().getId().equals(idUsuarioLogado)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas o criador do grupo pode editar o grupo");
         }
 
         grupo.setNome(dto.getNome());
 
-        return new GrupoResponseDTO(grupoRepository.save(grupo), dto.getIdCriador());
+        return new GrupoResponseDTO(grupoRepository.save(grupo), idUsuarioLogado);
     }
 
     @Transactional
@@ -138,7 +138,7 @@ public class GrupoService {
         Grupo grupo = buscarGrupo(idGrupo);
 
         if (!grupo.getCriador().getId().equals(idUsuarioLogado)) {
-            throw new IllegalArgumentException("Apenas o criador do grupo pode excluir o grupo");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas o criador do grupo pode excluir o grupo");
         }
 
         grupoRepository.delete(grupo);
@@ -149,7 +149,7 @@ public class GrupoService {
         Grupo grupo = buscarGrupo(idGrupo);
 
         if (grupo.getCriador().getId().equals(idUsuario)) {
-            throw new IllegalArgumentException("O criador do grupo nao pode sair por enquanto");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "O criador do grupo não pode sair do grupo");
         }
 
         removerDoGrupo(grupo, idUsuario);
@@ -225,19 +225,19 @@ public class GrupoService {
 
     void validarCriadorDoGrupo(Grupo grupo, String idUsuario) {
         if (!grupo.getCriador().getId().equals(idUsuario)) {
-            throw new IllegalArgumentException("Apenas o criador do grupo pode atribuir tarefas");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas o criador do grupo pode atribuir tarefas");
         }
     }
 
     void validarMembroDoGrupo(String idGrupo, String idUsuario) {
         if (!grupoMembroRepository.existsByGrupo_IdAndUsuario_Id(idGrupo, idUsuario)) {
-            throw new IllegalArgumentException("Usuario nao pertence a este grupo");
+            throw new IllegalArgumentException("Usuário não pertence a este grupo");
         }
     }
 
     private void validarMembroDaSala(String idSala, String idUsuario) {
         if (!membrosRepository.existsBySala_IdAndUsuario_Id(idSala, idUsuario)) {
-            throw new IllegalArgumentException("Usuario nao pertence a esta sala");
+            throw new IllegalArgumentException("Usuário não pertence a esta sala");
         }
     }
 

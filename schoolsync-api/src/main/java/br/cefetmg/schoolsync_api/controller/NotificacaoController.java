@@ -53,10 +53,10 @@ public class NotificacaoController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/usuario/{idUsuario}")
-    public ResponseEntity<List<NotificacaoResponseDTO>> listarPorUsuario(@PathVariable String idUsuario) {
-        usuarioAtual.validar(idUsuario);
-        return ResponseEntity.ok(notificacaoService.listarPorUsuario(idUsuario));
+    /** Notificações do usuário logado. */
+    @GetMapping
+    public ResponseEntity<List<NotificacaoResponseDTO>> listarMinhas() {
+        return ResponseEntity.ok(notificacaoService.listarPorUsuario(usuarioAtual.id()));
     }
 
     @PutMapping("/{id}/lida")
@@ -66,31 +66,27 @@ public class NotificacaoController {
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/usuario/{idUsuario}/lidas")
-    public ResponseEntity<Void> marcarTodasComoLidas(@PathVariable String idUsuario) {
-        usuarioAtual.validar(idUsuario);
-        notificacaoService.marcarTodasComoLidas(idUsuario);
+    @PutMapping("/lidas")
+    public ResponseEntity<Void> marcarTodasComoLidas() {
+        notificacaoService.marcarTodasComoLidas(usuarioAtual.id());
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/usuario/{idUsuario}/configuracoes")
-    public ResponseEntity<NotificacaoConfiguracaoDTO> buscarConfiguracao(@PathVariable String idUsuario) {
-        usuarioAtual.validar(idUsuario);
-        return ResponseEntity.ok(notificacaoService.buscarConfiguracao(idUsuario));
+    @GetMapping("/configuracoes")
+    public ResponseEntity<NotificacaoConfiguracaoDTO> buscarConfiguracao() {
+        return ResponseEntity.ok(notificacaoService.buscarConfiguracao(usuarioAtual.id()));
     }
 
-    @PutMapping("/usuario/{idUsuario}/configuracoes")
+    @PutMapping("/configuracoes")
     public ResponseEntity<NotificacaoConfiguracaoDTO> salvarConfiguracao(
-            @PathVariable String idUsuario,
             @Valid @RequestBody NotificacaoConfiguracaoDTO dto
     ) {
-        usuarioAtual.validar(idUsuario);
-        return ResponseEntity.ok(notificacaoService.salvarConfiguracao(idUsuario, dto));
+        return ResponseEntity.ok(notificacaoService.salvarConfiguracao(usuarioAtual.id(), dto));
     }
 
-    @GetMapping(value = "/usuario/{idUsuario}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter stream(@PathVariable String idUsuario) {
-        usuarioAtual.validar(idUsuario);
-        return notificacaoService.conectar(idUsuario);
+    /** O EventSource não manda cabeçalho: o token vem em ?token= e o filtro JWT autentica por ele. */
+    @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter stream() {
+        return notificacaoService.conectar(usuarioAtual.id());
     }
 }

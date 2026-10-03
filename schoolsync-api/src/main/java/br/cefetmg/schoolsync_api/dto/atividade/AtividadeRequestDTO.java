@@ -32,7 +32,4 @@ public class AtividadeRequestDTO {
 
     @NotBlank
     private String idSala;
-
-    @NotBlank
-    private String idCriador;
 }
