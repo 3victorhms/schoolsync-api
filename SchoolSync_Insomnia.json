@@ -1,0 +1,1225 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2026-10-04T13:50:00Z",
+  "__export_source": "insomnia.desktop.app:v10.0.0",
+  "resources": [
+    {
+      "_id": "wrk_schoolsync_v2",
+      "_type": "workspace",
+      "parentId": null,
+      "name": "SchoolSync API v2",
+      "scope": "collection",
+      "created": 1,
+      "modified": 1,
+      "description": "Testes da API do SchoolSync, na ordem da apresentação.\n\nAntes de começar:\n1. Escolha o ambiente 'Render (nuvem)' no canto superior esquerdo.\n2. Rode as duas requisições de cadastro da pasta 1 (se as contas já existirem, a API responde 400 'Email já cadastrado' e tudo bem).\n3. No console SQL do Neon, transforme a conta de admin: UPDATE tb_usuario SET perfil = 'ADMIN' WHERE email = '<email_admin>';\n4. Siga as pastas em ordem. Os tokens e os ids (sala, matéria, atividade) são preenchidos sozinhos a partir das respostas.\n\nPara repetir a demonstração do zero, rode a pasta 7 (exclui a sala criada)."
+    },
+    {
+      "_id": "env_schoolsync_base",
+      "_type": "environment",
+      "parentId": "wrk_schoolsync_v2",
+      "name": "Base Environment",
+      "isPrivate": false,
+      "metaSortKey": 1,
+      "created": 1,
+      "modified": 1,
+      "data": {
+        "email_usuario": "aluno.demo@schoolsync.com",
+        "senha_usuario": "senhaAluno123",
+        "email_admin": "admin.demo@schoolsync.com",
+        "senha_admin": "senhaAdmin123",
+        "token_usuario": "{% response 'body', 'req_ss_05', 'b64::JC50b2tlbg==::46b', 'no-history', 60 %}",
+        "token_admin": "{% response 'body', 'req_ss_06', 'b64::JC50b2tlbg==::46b', 'no-history', 60 %}",
+        "sala_id": "{% response 'body', 'req_ss_13', 'b64::JC5pZA==::46b', 'never', 60 %}",
+        "codigo_convite": "{% response 'body', 'req_ss_13', 'b64::JC5jb2RpZ29Db252aXRl::46b', 'never', 60 %}",
+        "materia_matematica": "{% response 'body', 'req_ss_13', 'b64::JC5tYXRlcmlhc1swXS5pZA==::46b', 'never', 60 %}",
+        "materia_portugues": "{% response 'body', 'req_ss_13', 'b64::JC5tYXRlcmlhc1sxXS5pZA==::46b', 'never', 60 %}",
+        "atividade_id": "{% response 'body', 'req_ss_20', 'b64::JC5pZA==::46b', 'never', 60 %}"
+      },
+      "dataPropertyOrder": {
+        "&": [
+          "email_usuario",
+          "senha_usuario",
+          "email_admin",
+          "senha_admin",
+          "token_usuario",
+          "token_admin",
+          "sala_id",
+          "codigo_convite",
+          "materia_matematica",
+          "materia_portugues",
+          "atividade_id"
+        ]
+      }
+    },
+    {
+      "_id": "env_schoolsync_render",
+      "_type": "environment",
+      "parentId": "env_schoolsync_base",
+      "name": "Render (nuvem)",
+      "isPrivate": false,
+      "metaSortKey": 2,
+      "created": 1,
+      "modified": 1,
+      "data": {
+        "base_url": "https://schoolsync-api-kvfx.onrender.com"
+      },
+      "dataPropertyOrder": {
+        "&": [
+          "base_url"
+        ]
+      },
+      "color": "#4C86BE"
+    },
+    {
+      "_id": "env_schoolsync_local",
+      "_type": "environment",
+      "parentId": "env_schoolsync_base",
+      "name": "Local",
+      "isPrivate": false,
+      "metaSortKey": 3,
+      "created": 1,
+      "modified": 1,
+      "data": {
+        "base_url": "http://localhost:8080"
+      },
+      "dataPropertyOrder": {
+        "&": [
+          "base_url"
+        ]
+      },
+      "color": "#7e88a6"
+    },
+    {
+      "_id": "fld_ss_1",
+      "_type": "request_group",
+      "parentId": "wrk_schoolsync_v2",
+      "name": "1. Endpoints públicos",
+      "description": "Rotas liberadas no SecurityConfig: não precisam de token.",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -999,
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_01",
+      "_type": "request",
+      "parentId": "fld_ss_1",
+      "name": "Cadastrar usuário comum",
+      "description": "Rota pública. Cria a conta que fica com perfil USUARIO. Se o e-mail já existir, volta 400 (Email já cadastrado).",
+      "method": "POST",
+      "url": "{{ _.base_url }}/usuarios",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"Aluno Demonstração\",\n  \"email\": \"{{ _.email_usuario }}\",\n  \"senha\": \"{{ _.senha_usuario }}\"\n}"
+      },
+      "authentication": {
+        "type": "none"
+      },
+      "metaSortKey": -998,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 201 ou 400', () => {\n  insomnia.expect(insomnia.response.code === 201 || insomnia.response.code === 400).to.equal(true);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_02",
+      "_type": "request",
+      "parentId": "fld_ss_1",
+      "name": "Cadastrar conta que vai ser admin",
+      "description": "Rota pública. Depois de criar, rode no Neon: UPDATE tb_usuario SET perfil = 'ADMIN' WHERE email = '<email_admin>';",
+      "method": "POST",
+      "url": "{{ _.base_url }}/usuarios",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"Admin Demonstração\",\n  \"email\": \"{{ _.email_admin }}\",\n  \"senha\": \"{{ _.senha_admin }}\"\n}"
+      },
+      "authentication": {
+        "type": "none"
+      },
+      "metaSortKey": -997,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 201 ou 400', () => {\n  insomnia.expect(insomnia.response.code === 201 || insomnia.response.code === 400).to.equal(true);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_03",
+      "_type": "request",
+      "parentId": "fld_ss_1",
+      "name": "Verificar se o e-mail já tem conta",
+      "description": "Rota pública usada pela tela de cadastro.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/usuarios/verificar-login?email={{ _.email_usuario }}",
+      "parameters": [],
+      "headers": [],
+      "body": {},
+      "authentication": {
+        "type": "none"
+      },
+      "metaSortKey": -996,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 200', () => {\n  insomnia.expect(insomnia.response.code).to.equal(200);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_04",
+      "_type": "request",
+      "parentId": "fld_ss_1",
+      "name": "Documentação OpenAPI (Swagger)",
+      "description": "Rota pública com a documentação de todas as rotas.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/v3/api-docs",
+      "parameters": [],
+      "headers": [],
+      "body": {},
+      "authentication": {
+        "type": "none"
+      },
+      "metaSortKey": -995,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 200', () => {\n  insomnia.expect(insomnia.response.code).to.equal(200);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "fld_ss_2",
+      "_type": "request_group",
+      "parentId": "wrk_schoolsync_v2",
+      "name": "2. Autenticação e token JWT",
+      "description": "O login devolve o token JWT, que as outras requisições usam no cabeçalho Authorization: Bearer.",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -994,
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_05",
+      "_type": "request",
+      "parentId": "fld_ss_2",
+      "name": "Login do usuário comum",
+      "description": "Gera o token do usuário comum (variável token_usuario).",
+      "method": "POST",
+      "url": "{{ _.base_url }}/usuarios/autenticar",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"{{ _.email_usuario }}\",\n  \"senha\": \"{{ _.senha_usuario }}\"\n}"
+      },
+      "authentication": {
+        "type": "none"
+      },
+      "metaSortKey": -993,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 200', () => {\n  insomnia.expect(insomnia.response.code).to.equal(200);\n});\ninsomnia.test('Devolve o token JWT', () => {\n  insomnia.expect(insomnia.response.json().token).to.be.a('string');\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_06",
+      "_type": "request",
+      "parentId": "fld_ss_2",
+      "name": "Login do admin",
+      "description": "Gera o token do admin (variável token_admin). O perfil vem do banco a cada requisição.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/usuarios/autenticar",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"{{ _.email_admin }}\",\n  \"senha\": \"{{ _.senha_admin }}\"\n}"
+      },
+      "authentication": {
+        "type": "none"
+      },
+      "metaSortKey": -992,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 200', () => {\n  insomnia.expect(insomnia.response.code).to.equal(200);\n});\ninsomnia.test('Usuário é ADMIN', () => {\n  insomnia.expect(insomnia.response.json().usuario.perfil).to.equal('ADMIN');\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_07",
+      "_type": "request",
+      "parentId": "fld_ss_2",
+      "name": "Login com senha errada",
+      "description": "Credenciais inválidas: a API recusa com 401 e não gera token.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/usuarios/autenticar",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"{{ _.email_usuario }}\",\n  \"senha\": \"senhaErrada999\"\n}"
+      },
+      "authentication": {
+        "type": "none"
+      },
+      "metaSortKey": -991,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 401', () => {\n  insomnia.expect(insomnia.response.code).to.equal(401);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "fld_ss_3",
+      "_type": "request_group",
+      "parentId": "wrk_schoolsync_v2",
+      "name": "3. Endpoints protegidos",
+      "description": "Todas as rotas fora da pasta 1 exigem token válido.",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -990,
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_08",
+      "_type": "request",
+      "parentId": "fld_ss_3",
+      "name": "Listar minhas salas SEM token",
+      "description": "Sem o cabeçalho Authorization: 401.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/salas",
+      "parameters": [],
+      "headers": [],
+      "body": {},
+      "authentication": {
+        "type": "none"
+      },
+      "metaSortKey": -989,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 401', () => {\n  insomnia.expect(insomnia.response.code).to.equal(401);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_09",
+      "_type": "request",
+      "parentId": "fld_ss_3",
+      "name": "Listar minhas salas com token inválido",
+      "description": "Token adulterado ou expirado: 401.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/salas",
+      "parameters": [],
+      "headers": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "token-invalido",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -988,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 401', () => {\n  insomnia.expect(insomnia.response.code).to.equal(401);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_10",
+      "_type": "request",
+      "parentId": "fld_ss_3",
+      "name": "Listar minhas salas COM token",
+      "description": "Com o token do login: 200.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/salas",
+      "parameters": [],
+      "headers": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_usuario }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -987,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 200', () => {\n  insomnia.expect(insomnia.response.code).to.equal(200);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "fld_ss_4",
+      "_type": "request_group",
+      "parentId": "wrk_schoolsync_v2",
+      "name": "4. Perfis e permissões",
+      "description": "Dois níveis de controle de acesso: o perfil global (ADMIN x USUARIO, no Spring Security) e o papel dentro da sala (líder x membro, nos services).",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -986,
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_11",
+      "_type": "request",
+      "parentId": "fld_ss_4",
+      "name": "Listar usuários como USUARIO (sem permissão)",
+      "description": "/admin/** exige perfil ADMIN: o usuário comum recebe 403.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/admin/usuarios",
+      "parameters": [],
+      "headers": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_usuario }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -985,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 403', () => {\n  insomnia.expect(insomnia.response.code).to.equal(403);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_12",
+      "_type": "request",
+      "parentId": "fld_ss_4",
+      "name": "Listar usuários como ADMIN",
+      "description": "O admin recebe a lista de usuários com o perfil de cada um.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/admin/usuarios",
+      "parameters": [],
+      "headers": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_admin }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -984,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 200', () => {\n  insomnia.expect(insomnia.response.code).to.equal(200);\n});\ninsomnia.test('Devolve uma lista', () => {\n  insomnia.expect(insomnia.response.json()).to.be.an('array');\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_13",
+      "_type": "request",
+      "parentId": "fld_ss_4",
+      "name": "Criar sala (quem cria vira líder)",
+      "description": "O admin cria a sala e vira o líder. A resposta preenche sala_id, codigo_convite e os ids das matérias.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/salas",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"Turma 3ºA - Demonstração\",\n  \"materias\": [\n    {\n      \"nome\": \"Matemática\"\n    },\n    {\n      \"nome\": \"Português\"\n    }\n  ],\n  \"tipoPeriodo\": \"BIMESTRE\",\n  \"periodos\": [\n    {\n      \"dataInicio\": \"2026-02-01\",\n      \"dataFim\": \"2026-04-20\",\n      \"pontuacaoMaxima\": 25\n    },\n    {\n      \"dataInicio\": \"2026-04-21\",\n      \"dataFim\": \"2026-07-09\",\n      \"pontuacaoMaxima\": 25\n    },\n    {\n      \"dataInicio\": \"2026-07-10\",\n      \"dataFim\": \"2026-09-26\",\n      \"pontuacaoMaxima\": 25\n    },\n    {\n      \"dataInicio\": \"2026-09-27\",\n      \"dataFim\": \"2026-12-15\",\n      \"pontuacaoMaxima\": 25\n    }\n  ]\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_admin }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -983,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 201', () => {\n  insomnia.expect(insomnia.response.code).to.equal(201);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_14",
+      "_type": "request",
+      "parentId": "fld_ss_4",
+      "name": "Usuário comum entra na sala pelo código",
+      "description": "O usuário comum vira membro (não líder).",
+      "method": "POST",
+      "url": "{{ _.base_url }}/salas/entrar?codigoConvite={{ _.codigo_convite }}",
+      "parameters": [],
+      "headers": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_usuario }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -982,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 200 ou 409', () => {\n  insomnia.expect(insomnia.response.code === 200 || insomnia.response.code === 409).to.equal(true);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_15",
+      "_type": "request",
+      "parentId": "fld_ss_4",
+      "name": "Membro tenta editar a sala (sem permissão)",
+      "description": "Só o líder edita a sala (RN01): o membro recebe 403.",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/salas/{{ _.sala_id }}",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"Turma 3ºA - Editada\",\n  \"materias\": [\n    {\n      \"id\": \"{{ _.materia_matematica }}\",\n      \"nome\": \"Matemática\"\n    },\n    {\n      \"id\": \"{{ _.materia_portugues }}\",\n      \"nome\": \"Português\"\n    }\n  ],\n  \"tipoPeriodo\": \"BIMESTRE\",\n  \"periodos\": [\n    {\n      \"dataInicio\": \"2026-02-01\",\n      \"dataFim\": \"2026-04-20\",\n      \"pontuacaoMaxima\": 25\n    },\n    {\n      \"dataInicio\": \"2026-04-21\",\n      \"dataFim\": \"2026-07-09\",\n      \"pontuacaoMaxima\": 25\n    },\n    {\n      \"dataInicio\": \"2026-07-10\",\n      \"dataFim\": \"2026-09-26\",\n      \"pontuacaoMaxima\": 25\n    },\n    {\n      \"dataInicio\": \"2026-09-27\",\n      \"dataFim\": \"2026-12-15\",\n      \"pontuacaoMaxima\": 25\n    }\n  ]\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_usuario }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -981,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 403', () => {\n  insomnia.expect(insomnia.response.code).to.equal(403);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_16",
+      "_type": "request",
+      "parentId": "fld_ss_4",
+      "name": "Líder edita a sala",
+      "description": "O líder consegue editar: 200.",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/salas/{{ _.sala_id }}",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"Turma 3ºA - Editada\",\n  \"materias\": [\n    {\n      \"id\": \"{{ _.materia_matematica }}\",\n      \"nome\": \"Matemática\"\n    },\n    {\n      \"id\": \"{{ _.materia_portugues }}\",\n      \"nome\": \"Português\"\n    }\n  ],\n  \"tipoPeriodo\": \"BIMESTRE\",\n  \"periodos\": [\n    {\n      \"dataInicio\": \"2026-02-01\",\n      \"dataFim\": \"2026-04-20\",\n      \"pontuacaoMaxima\": 25\n    },\n    {\n      \"dataInicio\": \"2026-04-21\",\n      \"dataFim\": \"2026-07-09\",\n      \"pontuacaoMaxima\": 25\n    },\n    {\n      \"dataInicio\": \"2026-07-10\",\n      \"dataFim\": \"2026-09-26\",\n      \"pontuacaoMaxima\": 25\n    },\n    {\n      \"dataInicio\": \"2026-09-27\",\n      \"dataFim\": \"2026-12-15\",\n      \"pontuacaoMaxima\": 25\n    }\n  ]\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_admin }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -980,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 200', () => {\n  insomnia.expect(insomnia.response.code).to.equal(200);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "fld_ss_5",
+      "_type": "request_group",
+      "parentId": "wrk_schoolsync_v2",
+      "name": "5. Upload de arquivo",
+      "description": "Foto de perfil enviada como arquivo (multipart/form-data) e guardada no Cloudinary.",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -979,
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_17",
+      "_type": "request",
+      "parentId": "fld_ss_5",
+      "name": "Enviar foto de perfil (arquivo)",
+      "description": "Antes de enviar, clique no campo 'arquivo' e escolha uma imagem JPG, PNG ou WebP de até 5 MB.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/usuarios/me/foto",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "multipart/form-data"
+        }
+      ],
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "name": "arquivo",
+            "type": "file",
+            "fileName": "",
+            "description": "Imagem JPG, PNG ou WebP até 5 MB"
+          }
+        ]
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_usuario }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -978,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 200', () => {\n  insomnia.expect(insomnia.response.code).to.equal(200);\n});\ninsomnia.test('Foto salva no Cloudinary', () => {\n  insomnia.expect(insomnia.response.json().foto).to.contain('cloudinary');\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_18",
+      "_type": "request",
+      "parentId": "fld_ss_5",
+      "name": "Enviar foto sem arquivo",
+      "description": "Sem o campo 'arquivo': 400 com mensagem explicando o formato esperado.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/usuarios/me/foto",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "multipart/form-data"
+        }
+      ],
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "name": "outro",
+            "value": "sem arquivo",
+            "type": "text"
+          }
+        ]
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_usuario }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -977,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 400', () => {\n  insomnia.expect(insomnia.response.code).to.equal(400);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "fld_ss_6",
+      "_type": "request_group",
+      "parentId": "wrk_schoolsync_v2",
+      "name": "6. Funcionalidades do SchoolSync",
+      "description": "Atividades, limite de pontos por período, caderno, comentários, boletim, grupos e notificações.",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -976,
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_19",
+      "_type": "request",
+      "parentId": "fld_ss_6",
+      "name": "Ver a sala (membro)",
+      "description": "Detalhes da sala com matérias, períodos e atividades.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/salas/{{ _.sala_id }}",
+      "parameters": [],
+      "headers": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_usuario }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -975,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 200', () => {\n  insomnia.expect(insomnia.response.code).to.equal(200);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_20",
+      "_type": "request",
+      "parentId": "fld_ss_6",
+      "name": "Criar atividade (15 pontos no 4º bimestre)",
+      "description": "O período é calculado pela data de entrega. A resposta preenche atividade_id.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/atividades",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"titulo\": \"Prova de funções\",\n  \"descricao\": \"Capítulos 3 e 4\",\n  \"idMateria\": \"{{ _.materia_matematica }}\",\n  \"dataEntrega\": \"2026-11-20\",\n  \"valor\": 15,\n  \"idSala\": \"{{ _.sala_id }}\"\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_usuario }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -974,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 201', () => {\n  insomnia.expect(insomnia.response.code).to.equal(201);\n});\ninsomnia.test('Período calculado', () => {\n  insomnia.expect(insomnia.response.json().nomePeriodo).to.equal('4º Bimestre');\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_21",
+      "_type": "request",
+      "parentId": "fld_ss_6",
+      "name": "Criar atividade acima do limite do período",
+      "description": "Matemática já tem 15 dos 25 pontos do 4º bimestre: outra de 15 passa do limite (RN22) e volta 422.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/atividades",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"titulo\": \"Lista extra\",\n  \"descricao\": \"Capítulos 3 e 4\",\n  \"idMateria\": \"{{ _.materia_matematica }}\",\n  \"dataEntrega\": \"2026-11-20\",\n  \"valor\": 15,\n  \"idSala\": \"{{ _.sala_id }}\"\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_usuario }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -973,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 422', () => {\n  insomnia.expect(insomnia.response.code).to.equal(422);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_22",
+      "_type": "request",
+      "parentId": "fld_ss_6",
+      "name": "Criar atividade fora dos períodos",
+      "description": "Data fora de todos os períodos da sala (RN21): 422.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/atividades",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"titulo\": \"Trabalho fora do ano\",\n  \"descricao\": \"Capítulos 3 e 4\",\n  \"idMateria\": \"{{ _.materia_matematica }}\",\n  \"dataEntrega\": \"2027-03-01\",\n  \"valor\": 5,\n  \"idSala\": \"{{ _.sala_id }}\"\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_usuario }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -972,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 422', () => {\n  insomnia.expect(insomnia.response.code).to.equal(422);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_23",
+      "_type": "request",
+      "parentId": "fld_ss_6",
+      "name": "Adicionar atividade ao caderno",
+      "description": "Quem cria a atividade já a tem no caderno; a rota não duplica.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/atividades/{{ _.atividade_id }}/caderno",
+      "parameters": [],
+      "headers": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_usuario }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -971,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 204', () => {\n  insomnia.expect(insomnia.response.code).to.equal(204);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_24",
+      "_type": "request",
+      "parentId": "fld_ss_6",
+      "name": "Marcar atividade como em andamento",
+      "description": "Muda o status no caderno do usuário.",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/atividades/{{ _.atividade_id }}/status?status=em_andamento",
+      "parameters": [],
+      "headers": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_usuario }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -970,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 204', () => {\n  insomnia.expect(insomnia.response.code).to.equal(204);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_25",
+      "_type": "request",
+      "parentId": "fld_ss_6",
+      "name": "Ver meu caderno",
+      "description": "Atividades no caderno do dono do token.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/atividades/caderno",
+      "parameters": [],
+      "headers": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_usuario }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -969,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 200', () => {\n  insomnia.expect(insomnia.response.code).to.equal(200);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_26",
+      "_type": "request",
+      "parentId": "fld_ss_6",
+      "name": "Comentar na atividade",
+      "description": "Membros da sala podem comentar (RN09).",
+      "method": "POST",
+      "url": "{{ _.base_url }}/atividades/{{ _.atividade_id }}/comentarios",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"texto\": \"Vai cair a parte de gráficos também?\"\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_admin }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -968,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 201', () => {\n  insomnia.expect(insomnia.response.code).to.equal(201);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_27",
+      "_type": "request",
+      "parentId": "fld_ss_6",
+      "name": "Lançar minha nota da atividade no boletim",
+      "description": "Boletim pessoal: só o dono vê. Se já existir nota para a atividade, volta 409.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/salas/{{ _.sala_id }}/notas",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"idAtividade\": \"{{ _.atividade_id }}\",\n  \"valorObtido\": 12.5\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_usuario }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -967,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 201 ou 409', () => {\n  insomnia.expect(insomnia.response.code === 201 || insomnia.response.code === 409).to.equal(true);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_28",
+      "_type": "request",
+      "parentId": "fld_ss_6",
+      "name": "Ver meu boletim na sala",
+      "description": "Notas do dono do token nesta sala.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/salas/{{ _.sala_id }}/notas",
+      "parameters": [],
+      "headers": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_usuario }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -966,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 200', () => {\n  insomnia.expect(insomnia.response.code).to.equal(200);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_29",
+      "_type": "request",
+      "parentId": "fld_ss_6",
+      "name": "Criar grupo na sala",
+      "description": "Qualquer membro pode criar grupo (RN06); quem cria vira líder do grupo.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/grupos",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"Grupo do trabalho de funções\",\n  \"idSala\": \"{{ _.sala_id }}\"\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_usuario }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -965,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 201', () => {\n  insomnia.expect(insomnia.response.code).to.equal(201);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_30",
+      "_type": "request",
+      "parentId": "fld_ss_6",
+      "name": "Ver minhas notificações (admin)",
+      "description": "O admin é membro da sala e foi notificado da atividade criada pelo usuário comum.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/notificacoes",
+      "parameters": [],
+      "headers": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_admin }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -964,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 200', () => {\n  insomnia.expect(insomnia.response.code).to.equal(200);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "fld_ss_7",
+      "_type": "request_group",
+      "parentId": "wrk_schoolsync_v2",
+      "name": "7. Limpeza (opcional)",
+      "description": "Apaga a sala da demonstração para poder repetir tudo do zero.",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -963,
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_31",
+      "_type": "request",
+      "parentId": "fld_ss_7",
+      "name": "Excluir a sala (líder)",
+      "description": "Exclui a sala com matérias, períodos, atividades, notas e grupos.",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/salas/{{ _.sala_id }}",
+      "parameters": [],
+      "headers": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_admin }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -962,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 204', () => {\n  insomnia.expect(insomnia.response.code).to.equal(204);\n});",
+      "created": 1,
+      "modified": 1
+    }
+  ]
+}

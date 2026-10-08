@@ -13,13 +13,16 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import br.cefetmg.schoolsync_api.repository.SalaRepository;
 import br.cefetmg.schoolsync_api.repository.GrupoRepository;
 import br.cefetmg.schoolsync_api.repository.TarefaRepository;
 import br.cefetmg.schoolsync_api.repository.DispositivoPushRepository;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
@@ -180,6 +183,30 @@ public class UsuarioService {
 
         usuario.setFoto(cloudinaryService.enviarFotoDePerfil(id, imagemBase64));
         return new UsuarioResponseDTO(usuarioRepository.save(usuario));
+    }
+
+    /**
+     * Foto enviada como arquivo (multipart). Converte para Data URI e reaproveita o
+     * mesmo fluxo da rota em Base64: as validações de tipo (JPG, PNG, WebP) e de
+     * tamanho (5 MB) e o envio ao Cloudinary ficam num lugar só.
+     */
+    @Transactional
+    public UsuarioResponseDTO atualizarFotoPorArquivo(String id, MultipartFile arquivo) {
+        if (arquivo == null || arquivo.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Envie um arquivo de imagem no campo 'arquivo'");
+        }
+
+        byte[] bytes;
+        try {
+            bytes = arquivo.getBytes();
+        } catch (IOException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Não foi possível ler o arquivo enviado", ex);
+        }
+
+        String tipo = arquivo.getContentType() == null ? "" : arquivo.getContentType();
+        String dataUri = "data:" + tipo + ";base64," + Base64.getEncoder().encodeToString(bytes);
+        return atualizarImagem(id, dataUri);
     }
 
     private void validarSolicitante(String id, String acao) {

@@ -10,8 +10,10 @@ import br.cefetmg.schoolsync_api.service.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -85,6 +87,17 @@ public class UsuarioController {
     @Operation(summary = "Enviar foto de perfil do usuário logado (Data URI em Base64)")
     public ResponseEntity<UsuarioResponseDTO> atualizarImagem(@Valid @RequestBody ImagemUsuarioDTO dto) {
         return ResponseEntity.ok(usuarioService.atualizarImagem(usuarioAtual.id(), dto.getImagemBase64()));
+    }
+
+    /**
+     * Upload de arquivo de verdade (multipart/form-data, campo "arquivo").
+     * Faz o mesmo que a rota PATCH /me/imagem, que recebe a imagem em Base64 e
+     * continua sendo a usada pelo app.
+     */
+    @PostMapping(value = "/me/foto", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Enviar foto de perfil como arquivo (multipart/form-data, campo 'arquivo')")
+    public ResponseEntity<UsuarioResponseDTO> enviarFoto(@RequestParam("arquivo") MultipartFile arquivo) {
+        return ResponseEntity.ok(usuarioService.atualizarFotoPorArquivo(usuarioAtual.id(), arquivo));
     }
 
     @DeleteMapping("/me")

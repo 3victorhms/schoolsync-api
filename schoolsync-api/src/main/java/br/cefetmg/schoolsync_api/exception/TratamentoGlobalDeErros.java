@@ -20,6 +20,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 import org.springframework.web.context.request.async.AsyncRequestTimeoutException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
@@ -73,6 +76,19 @@ public class TratamentoGlobalDeErros {
     })
     public ResponseEntity<ErroResponseDTO> requisicaoMalFormada(Exception ex, HttpServletRequest request) {
         return resposta(HttpStatus.BAD_REQUEST, "Requisição inválida: confira os dados enviados", request, null);
+    }
+
+    /** Upload acima do limite do multipart (spring.servlet.multipart: 5 MB). */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErroResponseDTO> arquivoGrandeDemais(MaxUploadSizeExceededException ex, HttpServletRequest request) {
+        return resposta(HttpStatus.PAYLOAD_TOO_LARGE, "O arquivo deve ter no máximo 5 MB", request, null);
+    }
+
+    /** Rota de upload chamada sem o arquivo, ou sem ser multipart/form-data. */
+    @ExceptionHandler({ MissingServletRequestPartException.class, MultipartException.class })
+    public ResponseEntity<ErroResponseDTO> uploadInvalido(Exception ex, HttpServletRequest request) {
+        return resposta(HttpStatus.BAD_REQUEST,
+                "Envie o arquivo como multipart/form-data no campo 'arquivo'", request, null);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

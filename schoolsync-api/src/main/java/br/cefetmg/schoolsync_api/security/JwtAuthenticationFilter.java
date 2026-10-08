@@ -4,10 +4,12 @@ import java.io.IOException;
 import java.util.List;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import br.cefetmg.schoolsync_api.entity.Perfil;
 import br.cefetmg.schoolsync_api.entity.Usuario;
 import br.cefetmg.schoolsync_api.repository.UsuarioRepository;
 import jakarta.servlet.FilterChain;
@@ -61,10 +63,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
+        // O perfil vira a "role" do Spring Security: ROLE_USUARIO ou ROLE_ADMIN.
+        // Vem do banco a cada requisição, então mudar o perfil vale sem gerar outro token.
+        Perfil perfil = usuario.getPerfil() == null ? Perfil.USUARIO : usuario.getPerfil();
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                 usuario,
                 null,
-                List.of()
+                List.of(new SimpleGrantedAuthority("ROLE_" + perfil.name()))
         );
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
