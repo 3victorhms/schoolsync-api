@@ -1,5 +1,6 @@
 package br.cefetmg.schoolsync_api.dto.usuario;
 
+import br.cefetmg.schoolsync_api.entity.Perfil;
 import br.cefetmg.schoolsync_api.entity.Usuario;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,6 +18,7 @@ public class UsuarioResponseDTO {
     private String email;
     private String foto;
     private boolean ativo;
+    private Perfil perfil;
 
     public UsuarioResponseDTO(Usuario usuario) {
         this.id = usuario.getId();
@@ -24,5 +26,6 @@ public class UsuarioResponseDTO {
         this.email = usuario.getEmail();
         this.foto = usuario.getFoto();
         this.ativo = usuario.isAtivo();
+        this.perfil = usuario.getPerfil();
     }
 }

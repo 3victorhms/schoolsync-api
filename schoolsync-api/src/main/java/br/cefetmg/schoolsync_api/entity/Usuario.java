@@ -2,6 +2,8 @@ package br.cefetmg.schoolsync_api.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -38,4 +40,12 @@ public class Usuario {
     // a conta é desativada e não excluída [RN]
     @Column(nullable = false, columnDefinition = "boolean default true")
     private boolean ativo = true;
+
+    /**
+     * Perfil global (USUARIO ou ADMIN). O default no banco permite criar a coluna
+     * com o ddl-auto mesmo com usuários já cadastrados: todos viram USUARIO.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20, columnDefinition = "varchar(20) default 'USUARIO'")
+    private Perfil perfil = Perfil.USUARIO;
 }
