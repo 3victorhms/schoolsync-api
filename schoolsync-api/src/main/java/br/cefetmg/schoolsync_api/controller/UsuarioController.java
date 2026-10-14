@@ -8,7 +8,7 @@ import br.cefetmg.schoolsync_api.dto.usuario.ImagemUsuarioDTO;
 import br.cefetmg.schoolsync_api.security.UsuarioAtual;
 import br.cefetmg.schoolsync_api.service.UsuarioService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -24,13 +24,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RestController
 @RequestMapping("/usuarios")
 @Tag(name = "Usuario")
+@RequiredArgsConstructor
 public class UsuarioController {
 
-    @Autowired
-    private UsuarioService usuarioService;
-
-    @Autowired
-    private UsuarioAtual usuarioAtual;
+    private final UsuarioService usuarioService;
+    private final UsuarioAtual usuarioAtual;
 
     // GET /usuarios (listar todos) foi removido: expunha nome e e-mail de todos
     // os usuários para qualquer pessoa logada, e o app não usa essa rota.

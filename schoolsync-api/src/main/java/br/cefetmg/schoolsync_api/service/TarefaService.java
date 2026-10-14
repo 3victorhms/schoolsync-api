@@ -36,7 +36,7 @@ public class TarefaService {
     public TarefaResponseDTO criar(String idGrupo, TarefaRequestDTO dto, String idUsuarioLogado) {
         Grupo grupo = grupoService.buscarGrupo(idGrupo);
         grupoService.validarCriadorDoGrupo(grupo, idUsuarioLogado);
-        grupoService.validarMembroDoGrupo(grupo.getId(), dto.getIdUsuarioAtribuido());
+        grupoService.validarAtribuidoNoGrupo(grupo.getId(), dto.getIdUsuarioAtribuido());
 
         Atividade atividade = atividadeRepository.findById(dto.getIdAtividade())
                 .orElseThrow(() -> new EntityNotFoundException("Atividade nao encontrada"));
