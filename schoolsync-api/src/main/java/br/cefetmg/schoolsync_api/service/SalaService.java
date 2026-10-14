@@ -78,10 +78,6 @@ public class SalaService {
         return new SalaResponseDTO(salaSalva, Map.of());
     }
 
-    /**
-     * Edita nome, matérias e períodos. Tudo numa transação: se alguma atividade
-     * ficar fora dos períodos ou estourar a nova pontuação máxima, nada é salvo.
-     */
     @Transactional
     public SalaResponseDTO atualizar(String id, SalaRequestDTO dto) {
         Sala sala = salaRepository.findByIdForUpdate(id)
@@ -97,12 +93,6 @@ public class SalaService {
         return new SalaResponseDTO(salaAtualizada, Map.of());
     }
 
-    // ===================== v2: matérias =====================
-
-    /**
-     * A lista recebida é a lista final de matérias da sala: com id = manter/renomear,
-     * sem id = criar, ausente = remover (só se nenhuma atividade usar a matéria).
-     */
     private void aplicarMaterias(Sala sala, List<MateriaRequestDTO> materiasDto) {
         Set<String> nomesUsados = new HashSet<>();
         for (MateriaRequestDTO materiaDto : materiasDto) {
@@ -127,7 +117,6 @@ public class SalaService {
             }
         }
 
-        // Remove primeiro as que saíram da lista (bloqueia se houver atividade nela)
         for (Materia existente : existentes.values()) {
             if (!idsMantidos.contains(existente.getId())) {
                 if (atividadeRepository.existsByMateria_Id(existente.getId())) {
@@ -157,8 +146,6 @@ public class SalaService {
         }
     }
 
-    // ===================== v2: períodos =====================
-
     private void aplicarPeriodos(Sala sala, TipoPeriodo tipo, List<PeriodoRequestDTO> periodosDto) {
         validarPeriodos(tipo, periodosDto);
 
@@ -173,7 +160,6 @@ public class SalaService {
         sala.setTipoPeriodo(tipo);
 
         if (!mudouTipo && sala.getPeriodos().size() == periodosDto.size()) {
-            // Mesmo tipo: atualiza no lugar, assim as atividades continuam apontando pros mesmos períodos
             for (int i = 0; i < periodosDto.size(); i++) {
                 Periodo periodo = sala.getPeriodos().get(i);
                 preencherPeriodo(periodo, i + 1, periodosDto.get(i));
@@ -197,7 +183,6 @@ public class SalaService {
         periodo.setPontuacaoMaxima(dto.getPontuacaoMaxima());
     }
 
-    /** Quantidade certa para o tipo, datas em ordem e sem sobreposição. */
     private void validarPeriodos(TipoPeriodo tipo, List<PeriodoRequestDTO> periodos) {
         if (periodos.size() != tipo.getQuantidade()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -221,10 +206,9 @@ public class SalaService {
         }
     }
 
-    /**
-     * Depois de editar os períodos, cada atividade volta a ser ligada ao período da
-     * sua data de entrega, e a soma por matéria/período é conferida de novo.
-     */
+    // depois de editar os períodos, cada atividade é ligada de novo ao período da data de entrega dela
+    // e a soma de pontos por matéria/período é conferida de novo. se alguma ficar fora ou passar do máximo
+    // dá erro e nada é salvo, pq tá tudo na mesma transação
     private void reencaixarAtividadesNosPeriodos(Sala sala) {
         Map<String, Double> somaPorMateriaEPeriodo = new HashMap<>();
         Map<String, Periodo> periodoPorChave = new HashMap<>();
@@ -242,7 +226,6 @@ public class SalaService {
             periodoPorChave.put(chave, periodo);
         }
 
-        // Boletim: notas de atividade seguem a atividade; avulsas são reencaixadas pela data
         for (Nota nota : notaRepository.findBySala_Id(sala.getId())) {
             if (!nota.isAvulsa()) {
                 nota.setPeriodo(nota.getAtividade().getPeriodo());
@@ -289,7 +272,6 @@ public class SalaService {
         }
 
         if (sala.getMembros().size() >= MAXIMO_MEMBROS_POR_SALA) {
-            // 409: a requisição é válida, mas a sala está cheia (RN16).
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Esta sala já atingiu o limite de " + MAXIMO_MEMBROS_POR_SALA + " alunos");
         }
@@ -335,7 +317,6 @@ public class SalaService {
         Sala sala = salaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
 
-        // As notas do boletim apontam para atividades, matérias e períodos: saem primeiro
         notaRepository.deleteBySala(sala.getId());
         salaRepository.delete(sala);
     }
@@ -377,10 +358,8 @@ public class SalaService {
                 cadernoRepository.findByAtividade_Sala_IdAndUsuario_Id(sala.getId(), idUsuario)
         );
 
-        // O boletim é por sala: quem sai leva junto (apaga) as próprias notas dela
         notaRepository.deleteBySalaAndUsuario(sala.getId(), idUsuario);
 
-        // Quem sai da sala sai também dos grupos dela (tarefas vão para o líder do grupo).
         grupoService.removerUsuarioDosGruposDaSala(sala.getId(), idUsuario);
 
         sala.getMembros().removeIf(m -> m.getId().equals(membro.getId()));
@@ -411,7 +390,6 @@ public class SalaService {
         return codigo;
     }
 
-    /** Editar ou excluir a sala: só o líder. */
     @Transactional(readOnly = true)
     public void validarMembro(String idSala, String idUsuario) {
         if (!membrosRepository.existsBySala_IdAndUsuario_Id(idSala, idUsuario)) {

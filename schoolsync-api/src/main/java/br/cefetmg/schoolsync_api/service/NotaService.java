@@ -26,10 +26,6 @@ import br.cefetmg.schoolsync_api.repository.UsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Boletim pessoal (v2): cada aluno lança as próprias notas, por sala.
- * O resumo por matéria/período é montado no app a partir desta lista.
- */
 @Service
 @RequiredArgsConstructor
 public class NotaService {
@@ -91,7 +87,6 @@ public class NotaService {
         if (nota.isAvulsa()) {
             preencherAvulsa(nota, nota.getSala(), dto, idUsuario, nota.getId());
         } else {
-            // Na nota de atividade só a nota obtida muda; o resto acompanha a atividade
             copiarDaAtividade(nota, nota.getAtividade());
         }
 
@@ -104,27 +99,22 @@ public class NotaService {
         notaRepository.delete(buscarMinha(idNota, idUsuario));
     }
 
-    // ===================== integração com atividades e salas =====================
-
-    /** A atividade mudou (matéria, data ou valor): as notas ligadas a ela acompanham. */
+    // se a atividade mudar (matéria, data ou valor) as notas ligadas a ela acompanham.
+    // se ela deixar de valer ponto, as notas q já foram lançadas viram avulsas
     @Transactional
     public void sincronizarComAtividade(Atividade atividade) {
         if (atividade.getValor() == null || atividade.getValor() <= 0) {
-            // Deixou de valer ponto: as notas já lançadas continuam no boletim como avulsas
             desvincularDaAtividade(atividade);
             return;
         }
         for (Nota nota : notaRepository.findByAtividade_Id(atividade.getId())) {
             copiarDaAtividade(nota, atividade);
-            // Se o valor da atividade diminuiu, a nota não pode ficar acima do novo máximo
             nota.setValorObtido(Math.min(nota.getValorObtido(), nota.getValorMaximo()));
         }
     }
 
-    /**
-     * A atividade vai ser excluída: as notas que os alunos já lançaram não somem,
-     * viram avulsas com o título da atividade como descrição.
-     */
+    // quando a atividade é excluída as notas q os alunos já lançaram n somem, viram avulsas
+    // e o título da atividade vira a descrição da nota
     @Transactional
     public void desvincularDaAtividade(Atividade atividade) {
         for (Nota nota : notaRepository.findByAtividade_Id(atividade.getId())) {
@@ -133,8 +123,6 @@ public class NotaService {
         }
         notaRepository.flush();
     }
-
-    // ===================== regras =====================
 
     private void copiarDaAtividade(Nota nota, Atividade atividade) {
         if (atividade.getValor() == null || atividade.getValor() <= 0) {
@@ -147,10 +135,6 @@ public class NotaService {
         nota.setData(atividade.getDataEntrega());
     }
 
-    /**
-     * Nota avulsa: a data define o período, e o valor máximo entra no limite de pontos
-     * do período junto com as atividades da sala e as outras avulsas do aluno.
-     */
     private void preencherAvulsa(Nota nota, Sala sala, NotaRequestDTO dto, String idUsuario, String idIgnorado) {
         if (!temTexto(dto.getDescricao())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Descreva a avaliação (ex.: Prova de março)");
@@ -215,7 +199,6 @@ public class NotaService {
         Nota nota = notaRepository.findById(idNota)
                 .orElseThrow(() -> new EntityNotFoundException("Nota não encontrada"));
         if (!nota.getUsuario().getId().equals(idUsuario)) {
-            // Boletim é pessoal: para os outros, a nota simplesmente não existe
             throw new EntityNotFoundException("Nota não encontrada");
         }
         return nota;

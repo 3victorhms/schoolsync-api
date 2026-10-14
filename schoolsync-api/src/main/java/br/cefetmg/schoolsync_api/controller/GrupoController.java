@@ -52,7 +52,6 @@ public class GrupoController {
         return ResponseEntity.ok(grupoService.buscarPorId(idGrupo, usuarioAtual.id()));
     }
 
-    /** Grupos do usuário logado dentro da sala. */
     @GetMapping("/salas/{idSala}/grupos")
     public ResponseEntity<List<GrupoResumoDTO>> listarMeusGruposDaSala(@PathVariable String idSala) {
         return ResponseEntity.ok(grupoService.listarPorSalaEUsuario(idSala, usuarioAtual.id()));
@@ -92,7 +91,6 @@ public class GrupoController {
         return ResponseEntity.ok(tarefaService.listarPorGrupo(idGrupo, usuarioAtual.id()));
     }
 
-    /** Tarefas atribuídas ao usuário logado em todos os grupos. */
     @GetMapping("/tarefas")
     public ResponseEntity<List<TarefaResponseDTO>> listarMinhasTarefas() {
         return ResponseEntity.ok(tarefaService.listarPorUsuario(usuarioAtual.id()));

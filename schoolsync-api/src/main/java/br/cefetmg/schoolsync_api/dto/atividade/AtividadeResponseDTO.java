@@ -14,13 +14,11 @@ public class AtividadeResponseDTO {
     private String idMateria;
     private String nomeMateria;
     private String idPeriodo;
-    /** Ex.: "2º Bimestre". Calculado pela data de entrega. */
     private String nomePeriodo;
     private LocalDate dataEntrega;
     private Double valor;
     private String idSala;
     private String idCriador;
-    /** Líder da sala: também pode editar e excluir a atividade (moderação). */
     private String idLiderSala;
 
     private boolean estaNoCaderno;

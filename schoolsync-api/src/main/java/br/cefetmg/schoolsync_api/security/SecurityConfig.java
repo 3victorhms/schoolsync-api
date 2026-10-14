@@ -30,7 +30,6 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // Sem token (ou token inválido) → 401; logado sem o perfil exigido → 403. Os dois em JSON.
                 .exceptionHandling(erros -> erros
                         .authenticationEntryPoint(respostasDeSeguranca)
                         .accessDeniedHandler(respostasDeSeguranca))
@@ -38,15 +37,14 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/usuarios", "/usuarios/autenticar").permitAll()
                         .requestMatchers(HttpMethod.GET, "/usuarios/verificar-login").permitAll()
-                        // O stream fica liberado aqui só para não quebrar o envio assíncrono do SSE;
-                        // sem token válido na URL o controller responde 401 (UsuarioAtual).
+                        // o stream fica liberado aqui só pra n quebrar o envio assíncrono do SSE,
+                        // mas sem token válido na url o controller responde 401 (pelo UsuarioAtual)
                         .requestMatchers(HttpMethod.GET, "/notificacoes/stream").permitAll()
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**")
                         .permitAll()
-                        // Perfil ADMIN: rotas de administração do sistema
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

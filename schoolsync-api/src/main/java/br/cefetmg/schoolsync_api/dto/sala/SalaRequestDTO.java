@@ -14,11 +14,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Usado para criar e para editar a sala. Na edição a lista de matérias é a lista
- * final: as que têm id são mantidas/renomeadas, as sem id são criadas e as que
- * sumiram da lista são removidas (se não tiverem atividades).
- */
 @Getter
 @Setter
 @NoArgsConstructor

@@ -14,9 +14,7 @@ public class NotaResponseDTO {
     private String nomeMateria;
     private String idPeriodo;
     private String nomePeriodo;
-    /** Null na avulsa. */
     private String idAtividade;
-    /** Título da atividade, ou a descrição informada na avulsa. */
     private String descricao;
     private boolean avulsa;
     private Double valorObtido;

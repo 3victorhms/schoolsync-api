@@ -30,9 +30,6 @@ public class UsuarioController {
     private final UsuarioService usuarioService;
     private final UsuarioAtual usuarioAtual;
 
-    // GET /usuarios (listar todos) foi removido: expunha nome e e-mail de todos
-    // os usuários para qualquer pessoa logada, e o app não usa essa rota.
-
     @GetMapping("/{id}")
     @Operation(summary = "Buscar usuário por ID")
     public ResponseEntity<UsuarioResponseDTO> buscarPorId(@PathVariable String id) {
@@ -72,8 +69,6 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.verificarLogin(email));
     }
 
-    // As rotas de alteração usam "/me": a conta alterada é sempre a do token.
-
     @PutMapping("/me")
     @Operation(summary = "Atualizar os dados do usuário logado")
     public ResponseEntity<UsuarioResponseDTO> atualizar(@Valid @RequestBody UsuarioRequestDTO usuarioRequestDTO) {
@@ -87,11 +82,6 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.atualizarImagem(usuarioAtual.id(), dto.getImagemBase64()));
     }
 
-    /**
-     * Upload de arquivo de verdade (multipart/form-data, campo "arquivo").
-     * Faz o mesmo que a rota PATCH /me/imagem, que recebe a imagem em Base64 e
-     * continua sendo a usada pelo app.
-     */
     @PostMapping(value = "/me/foto", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Enviar foto de perfil como arquivo (multipart/form-data, campo 'arquivo')")
     public ResponseEntity<UsuarioResponseDTO> enviarFoto(@RequestParam("arquivo") MultipartFile arquivo) {

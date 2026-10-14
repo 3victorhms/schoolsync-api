@@ -27,7 +27,6 @@ public class CloudinaryService {
     private static final long TAMANHO_MAXIMO = 5L * 1024 * 1024;
     private static final String PASTA_PERFIS = "schoolsync/perfis";
 
-    // Ex.: "data:image/png;base64,iVBORw0KGgo..."
     private static final Pattern DATA_URI = Pattern.compile("^data:(image/[a-zA-Z+.-]+);base64,(.+)$", Pattern.DOTALL);
 
     private final CloudinaryProperties properties;
@@ -38,12 +37,6 @@ public class CloudinaryService {
         this.restClient = RestClient.create();
     }
 
-    /**
-     * Envia a foto de perfil ao Cloudinary a partir de uma Data URI em Base64
-     * (ex.: "data:image/jpeg;base64,....."). Enviamos a própria string para o
-     * Cloudinary (ele aceita Data URI diretamente no campo "file"), então essa
-     * chamada nunca precisa montar um corpo multipart/binário.
-     */
     public String enviarFotoDePerfil(String idUsuario, String imagemDataUri) {
         if (!properties.configurado()) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,

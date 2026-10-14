@@ -15,7 +15,6 @@ import br.cefetmg.schoolsync_api.repository.NotificacaoConfiguracaoRepository;
 import br.cefetmg.schoolsync_api.repository.NotificacaoRepository;
 import lombok.RequiredArgsConstructor;
 
-/** Envia lembretes de prazo para as atividades presentes no caderno de cada usuário. */
 @Component
 @RequiredArgsConstructor
 public class LembreteAtividadeScheduler {
@@ -28,14 +27,12 @@ public class LembreteAtividadeScheduler {
     private final NotificacaoRepository notificacaoRepository;
     private final NotificacaoService notificacaoService;
 
-    /** Executa diariamente às 9h no fuso de São Paulo. */
     @Scheduled(cron = "${notificacoes.lembretes.cron:0 0 9 * * *}", zone = "${notificacoes.lembretes.zone:America/Sao_Paulo}")
     @Transactional
     public void enviarLembretesDiarios() {
         enviarLembretesPara(LocalDate.now());
     }
 
-    // Visibilidade de pacote permite testar a regra sem depender do relógio do servidor.
     void enviarLembretesPara(LocalDate hoje) {
         for (Integer diasAntes : DIAS_PERMITIDOS) {
             LocalDate dataEntrega = hoje.plusDays(diasAntes);

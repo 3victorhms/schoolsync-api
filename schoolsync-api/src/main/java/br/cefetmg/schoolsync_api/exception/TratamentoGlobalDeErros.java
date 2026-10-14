@@ -29,16 +29,11 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 
-/**
- * Converte as exceções dos services em respostas com status certo e mensagem legível.
- * Antes, IllegalArgumentException e EntityNotFoundException chegavam no app como 500.
- */
 @RestControllerAdvice
 public class TratamentoGlobalDeErros {
 
     private static final Logger log = LoggerFactory.getLogger(TratamentoGlobalDeErros.class);
 
-    /** Regras de negócio lançadas com status explícito (403, 409, 422...). */
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ErroResponseDTO> statusExplicito(ResponseStatusException ex, HttpServletRequest request) {
         String mensagem = ex.getReason() != null ? ex.getReason() : "Não foi possível concluir a ação";
@@ -50,13 +45,11 @@ public class TratamentoGlobalDeErros {
         return resposta(HttpStatus.NOT_FOUND, ex.getMessage(), request, null);
     }
 
-    /** Dado inválido enviado pelo app (ex.: usuário que não pertence ao grupo). */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErroResponseDTO> argumentoInvalido(IllegalArgumentException ex, HttpServletRequest request) {
         return resposta(HttpStatus.BAD_REQUEST, ex.getMessage(), request, null);
     }
 
-    /** @Valid nos DTOs: devolve a primeira mensagem em "message" e todas em "campos". */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErroResponseDTO> validacao(MethodArgumentNotValidException ex, HttpServletRequest request) {
         Map<String, String> campos = new LinkedHashMap<>();
@@ -78,13 +71,11 @@ public class TratamentoGlobalDeErros {
         return resposta(HttpStatus.BAD_REQUEST, "Requisição inválida: confira os dados enviados", request, null);
     }
 
-    /** Upload acima do limite do multipart (spring.servlet.multipart: 5 MB). */
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ErroResponseDTO> arquivoGrandeDemais(MaxUploadSizeExceededException ex, HttpServletRequest request) {
         return resposta(HttpStatus.PAYLOAD_TOO_LARGE, "O arquivo deve ter no máximo 5 MB", request, null);
     }
 
-    /** Rota de upload chamada sem o arquivo, ou sem ser multipart/form-data. */
     @ExceptionHandler({ MissingServletRequestPartException.class, MultipartException.class })
     public ResponseEntity<ErroResponseDTO> uploadInvalido(Exception ex, HttpServletRequest request) {
         return resposta(HttpStatus.BAD_REQUEST,
@@ -102,22 +93,18 @@ public class TratamentoGlobalDeErros {
         return resposta(HttpStatus.NOT_FOUND, "Rota não encontrada", request, null);
     }
 
-    /** Stream de notificações (SSE) expirou: o app reconecta sozinho, sem corpo de erro. */
     @ExceptionHandler(AsyncRequestTimeoutException.class)
     public ResponseEntity<Void> streamExpirado() {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
     }
 
-    /** O app fechou a conexão do stream no meio do envio: não há para quem responder. */
     @ExceptionHandler(AsyncRequestNotUsableException.class)
     public void conexaoEncerradaPeloCliente() {
         // nada a fazer
     }
 
-    /** Qualquer outra coisa: registra no log e não vaza detalhes internos para o app. */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErroResponseDTO> erroInesperado(Exception ex, HttpServletRequest request) {
-        // Exceções do próprio Spring MVC (405, 415, 406...) já sabem o status certo
         if (ex instanceof ErrorResponse erroDoSpring) {
             return resposta(erroDoSpring.getStatusCode(), "Requisição não suportada", request, null);
         }

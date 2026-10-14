@@ -24,7 +24,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-/** v2: o usuário vem sempre do token (UsuarioAtual), nunca de parâmetro da requisição. */
 @RestController
 @RequestMapping("/salas")
 @Tag(name = "Sala")

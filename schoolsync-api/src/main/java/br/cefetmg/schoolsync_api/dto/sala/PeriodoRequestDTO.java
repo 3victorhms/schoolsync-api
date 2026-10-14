@@ -10,7 +10,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Os períodos vão na ordem do ano letivo: o primeiro da lista é o 1º bimestre etc. */
 @Getter
 @Setter
 @NoArgsConstructor

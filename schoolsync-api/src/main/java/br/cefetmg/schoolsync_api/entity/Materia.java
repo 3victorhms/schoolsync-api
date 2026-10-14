@@ -14,14 +14,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Matéria da sala (v2). Antes a disciplina era um texto livre em cada atividade;
- * agora o líder cadastra as matérias e as atividades escolhem uma delas.
- *
- * O nome não tem unique no banco de propósito: ao renomear/remover matérias na
- * mesma requisição o Hibernate faz os INSERTs antes dos DELETEs e a constraint
- * quebraria. A unicidade (sem diferenciar maiúsculas) é garantida no SalaService.
- */
+// o nome n é unique no banco de propósito: quando renomeia e remove matérias na mesma requisição
+// o hibernate faz os inserts antes dos deletes e a constraint quebraria. a regra de nome repetido fica no SalaService
 @Entity
 @Table(name = "tb_materia")
 @Getter

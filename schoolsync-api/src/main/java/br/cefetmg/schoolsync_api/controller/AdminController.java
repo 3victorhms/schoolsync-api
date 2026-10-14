@@ -13,10 +13,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Rotas de administração. O acesso é liberado só para o perfil ADMIN no
- * SecurityConfig (/admin/** → hasRole("ADMIN")); um USUARIO recebe 403.
- */
 @RestController
 @RequestMapping("/admin")
 @Tag(name = "Admin")

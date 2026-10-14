@@ -5,12 +5,6 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
-/**
- * Corpo usado para trocar a foto de perfil.
- * A imagem chega como Data URI em Base64 (ex.: "data:image/png;base64,....")
- * em vez de multipart/form-data, para evitar problemas de proxy/CDN com
- * uploads multipart em alguns ambientes.
- */
 @Getter
 @Setter
 public class ImagemUsuarioDTO {

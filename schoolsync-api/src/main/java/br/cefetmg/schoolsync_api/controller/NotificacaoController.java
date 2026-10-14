@@ -53,7 +53,6 @@ public class NotificacaoController {
         return ResponseEntity.noContent().build();
     }
 
-    /** Notificações do usuário logado. */
     @GetMapping
     public ResponseEntity<List<NotificacaoResponseDTO>> listarMinhas() {
         return ResponseEntity.ok(notificacaoService.listarPorUsuario(usuarioAtual.id()));
@@ -84,7 +83,6 @@ public class NotificacaoController {
         return ResponseEntity.ok(notificacaoService.salvarConfiguracao(usuarioAtual.id(), dto));
     }
 
-    /** O EventSource não manda cabeçalho: o token vem em ?token= e o filtro JWT autentica por ele. */
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter stream() {
         return notificacaoService.conectar(usuarioAtual.id());
