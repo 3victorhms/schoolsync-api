@@ -13,7 +13,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class MateriaRequestDTO {
 
-    /** Vazio para matéria nova; preenchido quando o líder renomeia uma existente. */
     private String id;
 
     @NotBlank(message = "Informe o nome da matéria")

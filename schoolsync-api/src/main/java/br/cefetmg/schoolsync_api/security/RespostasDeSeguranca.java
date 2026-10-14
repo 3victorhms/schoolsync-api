@@ -18,26 +18,20 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Respostas do Spring Security no mesmo formato de erro do resto da API.
- *
- * Esses erros acontecem no filtro, antes de chegar ao controller, por isso o
- * TratamentoGlobalDeErros (@RestControllerAdvice) não os alcança.
- */
+// classe pra devolver os erros 401 e 403 do spring security no mesmo formato json do resto da api.
+// esses erros acontecem no filtro, antes de chegar no controller, por isso o TratamentoGlobalDeErros n pega eles
 @Component
 @RequiredArgsConstructor
 public class RespostasDeSeguranca implements AuthenticationEntryPoint, AccessDeniedHandler {
 
     private final ObjectMapper objectMapper;
 
-    /** Rota protegida acessada sem token, ou com token inválido/expirado. */
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
             AuthenticationException authException) throws IOException {
         escrever(request, response, HttpStatus.UNAUTHORIZED, "Faça login para acessar este recurso");
     }
 
-    /** Usuário logado, mas sem o perfil exigido (ex.: USUARIO acessando /admin/**). */
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response,
             AccessDeniedException accessDeniedException) throws IOException {

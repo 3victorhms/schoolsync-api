@@ -1,9 +1,5 @@
 package br.cefetmg.schoolsync_api.entity;
 
-/**
- * Como o ano letivo da sala é dividido. O líder escolhe ao criar a sala
- * e cada tipo define quantos períodos a sala precisa ter.
- */
 public enum TipoPeriodo {
 
     BIMESTRE(4, "Bimestre"),
@@ -26,7 +22,6 @@ public enum TipoPeriodo {
         return rotulo;
     }
 
-    /** Ex.: nomeDoPeriodo(2) em uma sala por bimestre = "2º Bimestre". */
     public String nomeDoPeriodo(int ordem) {
         return ordem + "º " + rotulo;
     }

@@ -8,12 +8,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import br.cefetmg.schoolsync_api.entity.Usuario;
 
-/**
- * Usuário autenticado pelo token JWT da requisição.
- *
- * v2: os endpoints não recebem mais o id do usuário (idUsuario, idUsuarioLogado,
- * idCriador...). Quem está fazendo a ação é sempre o dono do token.
- */
 @Component
 public class UsuarioAtual {
 

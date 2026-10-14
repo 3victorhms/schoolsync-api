@@ -58,8 +58,6 @@ public class Sala {
     @OneToMany(mappedBy = "sala", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Grupo> grupos = new ArrayList<>();
 
-    // ===== v2: matérias e períodos letivos =====
-
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_periodo", nullable = false, length = 20)
     private TipoPeriodo tipoPeriodo;
@@ -72,7 +70,6 @@ public class Sala {
     @OrderBy("ordem ASC")
     private List<Periodo> periodos = new ArrayList<>();
 
-    /** Período em que a data cai, se houver (datas fora do ano letivo não têm). */
     public Optional<Periodo> periodoDaData(LocalDate data) {
         return periodos.stream().filter(periodo -> periodo.contem(data)).findFirst();
     }

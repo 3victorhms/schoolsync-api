@@ -15,8 +15,9 @@ import br.cefetmg.schoolsync_api.config.CloudinaryProperties;
 public class SchoolsyncApiApplication {
 
 	public static void main(String[] args) {
-		// O servidor (Render) roda em UTC. Sem isso, LocalDateTime.now() grava
-		// horários 3h adiantados e as contas com "hoje" viram o dia às 21h.
+		// o servidor do render roda em UTC, sem isso o LocalDateTime.now() grava horário 3h adiantado
+		// e o "hoje" vira às 21h
+		// (comentário feito com auxílio do Claude)
 		TimeZone.setDefault(TimeZone.getTimeZone("America/Sao_Paulo"));
 		SpringApplication.run(SchoolsyncApiApplication.class, args);
 	}

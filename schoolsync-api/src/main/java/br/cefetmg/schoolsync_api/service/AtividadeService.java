@@ -118,7 +118,6 @@ public class AtividadeService {
 
         Atividade atividadeAtualizada = atividadeRepository.save(atividade);
 
-        // Boletim: as notas lançadas nesta atividade acompanham matéria, período e valor
         notaService.sincronizarComAtividade(atividadeAtualizada);
 
         notificarAtividadeAtualizada(atividadeAtualizada);
@@ -134,7 +133,6 @@ public class AtividadeService {
                         "Escolha uma das matérias cadastradas nesta sala"));
     }
 
-    /** O período sai da data de entrega; fora do ano letivo da sala a atividade é recusada. */
     private Periodo buscarPeriodoDaData(Sala sala, LocalDate dataEntrega) {
         return sala.periodoDaData(dataEntrega)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
@@ -142,10 +140,8 @@ public class AtividadeService {
                                 + "está fora dos períodos letivos da sala"));
     }
 
-    /**
-     * v2: a soma dos valores das atividades de uma matéria dentro de um período
-     * não pode passar da pontuação máxima daquele período (ex.: 25 pts no 1º bimestre).
-     */
+    // soma o valor das atividades dessa matéria no período (na edição ignora a própria atividade)
+    // e n deixa passar da pontuação máxima. a margem de 0.000001 é pq o double n guarda decimal exato
     private void validarPontuacao(Materia materia, Periodo periodo, Double novoValor, String idIgnorado) {
         if (novoValor == null || novoValor < 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O valor da atividade não pode ser negativo");
@@ -273,7 +269,6 @@ public class AtividadeService {
         cadernoRepository.save(caderno);
     }
 
-    /** Editar ou excluir: só quem criou a atividade ou o líder da sala. */
     @Transactional(readOnly = true)
     public void validarPodeGerenciar(String idAtividade, String idUsuario) {
         Atividade atividade = atividadeRepository.findById(idAtividade)
@@ -287,7 +282,6 @@ public class AtividadeService {
         }
     }
 
-    /** Ver, comentar ou salvar no caderno: só membros da sala da atividade. */
     @Transactional(readOnly = true)
     public void validarAcessoAtividade(String idAtividade, String idUsuario) {
         Atividade atividade = atividadeRepository.findById(idAtividade)

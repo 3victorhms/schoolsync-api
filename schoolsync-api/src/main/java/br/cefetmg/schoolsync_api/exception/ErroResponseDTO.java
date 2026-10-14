@@ -5,10 +5,6 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-/**
- * Formato único de erro da API. O app lê sempre "message" para mostrar o aviso;
- * "campos" só aparece em erro de validação (campo -> mensagem).
- */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record ErroResponseDTO(
         LocalDateTime timestamp,

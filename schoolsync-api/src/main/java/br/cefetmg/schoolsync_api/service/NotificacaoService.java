@@ -197,7 +197,6 @@ public class NotificacaoService {
         }
     }
 
-    /** Cada usuário só mexe nas próprias notificações. */
     @Transactional(readOnly = true)
     public void validarDono(String idNotificacao, String idUsuario) {
         Notificacao notificacao = notificacaoRepository.findById(idNotificacao)

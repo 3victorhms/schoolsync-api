@@ -185,11 +185,6 @@ public class UsuarioService {
         return new UsuarioResponseDTO(usuarioRepository.save(usuario));
     }
 
-    /**
-     * Foto enviada como arquivo (multipart). Converte para Data URI e reaproveita o
-     * mesmo fluxo da rota em Base64: as validações de tipo (JPG, PNG, WebP) e de
-     * tamanho (5 MB) e o envio ao Cloudinary ficam num lugar só.
-     */
     @Transactional
     public UsuarioResponseDTO atualizarFotoPorArquivo(String id, MultipartFile arquivo) {
         if (arquivo == null || arquivo.isEmpty()) {

@@ -46,8 +46,6 @@ public class NotificacaoPushService {
         DispositivoPush dispositivo = dispositivoRepository.findByToken(dto.getToken())
                 .orElseGet(DispositivoPush::new);
 
-        // Um token pertence ao usuário atualmente conectado naquele aparelho.
-        // Se outra conta entrar no mesmo celular, o vínculo anterior é substituído.
         dispositivo.setUsuario(usuario);
         dispositivo.setToken(dto.getToken());
         dispositivo.setPlataforma(dto.getPlataforma());
@@ -69,7 +67,6 @@ public class NotificacaoPushService {
         }
     }
 
-    /** Dispara uma notificação real para o dispositivo do usuário autenticado. */
     public void testarEnvioParaUsuarioAutenticado() {
         Usuario usuario = usuarioAutenticado();
         try {

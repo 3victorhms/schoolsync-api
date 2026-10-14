@@ -18,17 +18,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Nota pessoal do boletim (v2). Só o próprio aluno vê e lança.
- *
- * Dois formatos:
- *  - ligada a uma atividade da sala: matéria, período, valor máximo e data vêm da atividade;
- *  - avulsa (atividade = null): o aluno informa descrição, matéria, valor máximo e data,
- *    para registrar notas antigas ou que não foram cadastradas como atividade.
- *
- * Matéria, período e valor máximo ficam gravados nos dois casos (nas ligadas, são copiados
- * da atividade e atualizados quando ela muda) para o boletim sair de uma consulta simples.
- */
 @Entity
 @Table(
         name = "tb_nota",
@@ -60,12 +49,10 @@ public class Nota {
     @JoinColumn(name = "id_periodo", nullable = false)
     private Periodo periodo;
 
-    /** Null quando a nota é avulsa. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_atividade")
     private Atividade atividade;
 
-    /** Obrigatória na avulsa (ex.: "Prova de recuperação de março"). */
     @Column(length = 150)
     private String descricao;
 
@@ -75,7 +62,6 @@ public class Nota {
     @Column(name = "valor_maximo", nullable = false)
     private Double valorMaximo;
 
-    /** Data da avaliação: a entrega da atividade, ou a informada na avulsa. */
     @Column(nullable = false)
     private LocalDate data;
 

@@ -16,10 +16,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Um bimestre/trimestre/semestre da sala. A soma dos valores das atividades de
- * uma matéria dentro do período não pode passar de pontuacaoMaxima.
- */
 @Entity
 @Table(name = "tb_periodo")
 @Getter
@@ -32,7 +28,6 @@ public class Periodo {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    /** 1, 2, 3... na ordem do ano letivo. */
     @Column(nullable = false)
     private Integer ordem;
 
@@ -49,12 +44,10 @@ public class Periodo {
     @JoinColumn(name = "id_sala", nullable = false)
     private Sala sala;
 
-    /** A data cai dentro do período (início e fim inclusos). */
     public boolean contem(LocalDate data) {
         return data != null && !data.isBefore(dataInicio) && !data.isAfter(dataFim);
     }
 
-    /** "2º Bimestre", "1º Semestre"... depende do tipo escolhido na sala. */
     public String getNome() {
         return sala.getTipoPeriodo().nomeDoPeriodo(ordem);
     }

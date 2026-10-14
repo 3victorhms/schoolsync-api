@@ -18,7 +18,6 @@ public class AtividadeRequestDTO {
 
     private String descricao;
 
-    /** v2: id de uma das matérias da sala (antes era o nome da disciplina digitado). */
     @NotBlank(message = "Escolha a matéria da atividade")
     private String idMateria;
 

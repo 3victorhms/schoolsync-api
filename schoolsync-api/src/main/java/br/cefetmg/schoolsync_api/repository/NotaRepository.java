@@ -20,7 +20,6 @@ public interface NotaRepository extends JpaRepository<Nota, String> {
 
     Optional<Nota> findByAtividade_IdAndUsuario_Id(String idAtividade, String idUsuario);
 
-    /** Notas avulsas do aluno numa matéria/período: entram no limite de pontos do período. */
     List<Nota> findByUsuario_IdAndMateria_IdAndPeriodo_IdAndAtividadeIsNull(String idUsuario, String idMateria, String idPeriodo);
 
     boolean existsByMateria_Id(String idMateria);

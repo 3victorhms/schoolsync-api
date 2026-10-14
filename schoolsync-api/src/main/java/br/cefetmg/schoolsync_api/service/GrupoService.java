@@ -155,7 +155,6 @@ public class GrupoService {
         removerDoGrupo(grupo, idUsuario);
     }
 
-    /** O líder do grupo remove um membro. As tarefas do membro passam para o líder. */
     @Transactional
     public void removerMembro(String idGrupo, String idUsuarioRemover, String idUsuarioLogado) {
         Grupo grupo = buscarGrupo(idGrupo);
@@ -171,12 +170,8 @@ public class GrupoService {
         removerDoGrupo(grupo, idUsuarioRemover);
     }
 
-    /**
-     * Chamado quando o usuário sai ou é removido de uma sala: ele também sai
-     * de todos os grupos daquela sala. Se ele era o líder de um grupo, a
-     * liderança passa para o membro mais antigo; se o grupo ficar vazio, o
-     * grupo é excluído.
-     */
+    // quando alguém sai ou é removido da sala, sai tbm de todos os grupos dela.
+    // se era líder de algum grupo, o membro mais antigo vira o líder. se o grupo ficar vazio ele é excluído
     @Transactional
     public void removerUsuarioDosGruposDaSala(String idSala, String idUsuario) {
         List<Grupo> grupos = grupoRepository.findBySala_IdAndMembros_Usuario_Id(idSala, idUsuario);
@@ -200,7 +195,6 @@ public class GrupoService {
         }
     }
 
-    /** Tira o usuário do grupo e passa as tarefas atribuídas a ele para o líder do grupo. */
     private void removerDoGrupo(Grupo grupo, String idUsuario) {
         GrupoMembro membro = grupoMembroRepository
                 .findByGrupo_IdAndUsuario_Id(grupo.getId(), idUsuario)
@@ -229,24 +223,19 @@ public class GrupoService {
         }
     }
 
-    /** Quem está logado precisa participar do grupo para ver o grupo e as tarefas dele (403). */
     void validarMembroDoGrupo(String idGrupo, String idUsuario) {
         if (!grupoMembroRepository.existsByGrupo_IdAndUsuario_Id(idGrupo, idUsuario)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você não participa deste grupo");
         }
     }
 
-    /**
-     * O usuário escolhido para receber uma tarefa precisa ser do grupo.
-     * Aqui o problema é o dado enviado, não a permissão de quem está logado: 400.
-     */
+    // aqui é 400 e n 403 pq o problema é o usuário escolhido pra tarefa, n a permissão de quem tá logado
     void validarAtribuidoNoGrupo(String idGrupo, String idUsuario) {
         if (!grupoMembroRepository.existsByGrupo_IdAndUsuario_Id(idGrupo, idUsuario)) {
             throw new IllegalArgumentException("O usuário escolhido não pertence a este grupo");
         }
     }
 
-    /** Criar ou entrar num grupo: só quem participa da sala (403, como nas outras rotas da sala). */
     private void validarMembroDaSala(String idSala, String idUsuario) {
         if (!membrosRepository.existsBySala_IdAndUsuario_Id(idSala, idUsuario)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você não participa desta sala");
