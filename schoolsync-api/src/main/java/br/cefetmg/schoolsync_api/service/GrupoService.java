@@ -229,15 +229,27 @@ public class GrupoService {
         }
     }
 
+    /** Quem está logado precisa participar do grupo para ver o grupo e as tarefas dele (403). */
     void validarMembroDoGrupo(String idGrupo, String idUsuario) {
         if (!grupoMembroRepository.existsByGrupo_IdAndUsuario_Id(idGrupo, idUsuario)) {
-            throw new IllegalArgumentException("Usuário não pertence a este grupo");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você não participa deste grupo");
         }
     }
 
+    /**
+     * O usuário escolhido para receber uma tarefa precisa ser do grupo.
+     * Aqui o problema é o dado enviado, não a permissão de quem está logado: 400.
+     */
+    void validarAtribuidoNoGrupo(String idGrupo, String idUsuario) {
+        if (!grupoMembroRepository.existsByGrupo_IdAndUsuario_Id(idGrupo, idUsuario)) {
+            throw new IllegalArgumentException("O usuário escolhido não pertence a este grupo");
+        }
+    }
+
+    /** Criar ou entrar num grupo: só quem participa da sala (403, como nas outras rotas da sala). */
     private void validarMembroDaSala(String idSala, String idUsuario) {
         if (!membrosRepository.existsBySala_IdAndUsuario_Id(idSala, idUsuario)) {
-            throw new IllegalArgumentException("Usuário não pertence a esta sala");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você não participa desta sala");
         }
     }
 
