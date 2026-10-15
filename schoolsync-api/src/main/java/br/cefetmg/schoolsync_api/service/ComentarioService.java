@@ -17,6 +17,7 @@ import br.cefetmg.schoolsync_api.entity.Comentario;
 import br.cefetmg.schoolsync_api.entity.Usuario;
 import br.cefetmg.schoolsync_api.repository.AtividadeRepository;
 import br.cefetmg.schoolsync_api.repository.ComentarioRepository;
+import br.cefetmg.schoolsync_api.repository.MembrosRepository;
 import br.cefetmg.schoolsync_api.repository.UsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class ComentarioService {
     private final AtividadeRepository atividadeRepository;
     private final UsuarioRepository usuarioRepository;
     private final NotificacaoService notificacaoService;
+    private final MembrosRepository membrosRepository;
 
     @Transactional
     public ComentarioResponseDTO criar(String idAtividade, ComentarioRequestDTO dto, String idUsuario) {
@@ -127,6 +129,11 @@ public class ComentarioService {
     private void validarAutor(Comentario comentario, String idUsuario) {
         if (!comentario.getUsuario().getId().equals(idUsuario)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas o autor pode alterar este comentário");
+        }
+        // o autor tbm precisa continuar na sala da atividade
+        String idSala = comentario.getAtividade().getSala().getId();
+        if (!membrosRepository.existsBySala_IdAndUsuario_Id(idSala, idUsuario)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você não participa desta sala");
         }
     }
 }

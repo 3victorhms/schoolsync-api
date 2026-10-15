@@ -2,6 +2,7 @@ package br.cefetmg.schoolsync_api.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -70,7 +71,8 @@ public class GrupoService {
 
     @Transactional
     public GrupoResponseDTO entrar(String codigoConvite, String idUsuario) {
-        Grupo grupo = grupoRepository.findByCodigoConvite(codigoConvite)
+        // os códigos são gerados em maiúsculas, ent aceita o código digitado em minúsculas tbm
+        Grupo grupo = grupoRepository.findByCodigoConvite(codigoConvite.trim().toUpperCase(Locale.ROOT))
                 .orElseThrow(() -> new EntityNotFoundException("Grupo nao encontrado"));
 
         Usuario usuario = usuarioRepository.findById(idUsuario)
@@ -141,7 +143,43 @@ public class GrupoService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas o criador do grupo pode excluir o grupo");
         }
 
+        // tira as notificações do grupo e das tarefas dele, pra ninguém abrir um aviso de algo q n existe mais
+        grupo.getTarefas().forEach(tarefa -> notificacaoService.removerPorAlvo(tarefa.getId()));
+        notificacaoService.removerPorAlvo(grupo.getId());
         grupoRepository.delete(grupo);
+    }
+
+    // o líder do grupo passa a liderança pra outro membro. quem recebe passa a poder criar,
+    // atribuir e excluir tarefas, e o antigo líder vira um membro comum
+    @Transactional
+    public GrupoResponseDTO transferirLideranca(String idGrupo, String idNovoLider, String idUsuarioLogado) {
+        Grupo grupo = buscarGrupo(idGrupo);
+
+        if (!grupo.getCriador().getId().equals(idUsuarioLogado)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas o líder do grupo pode transferir a liderança");
+        }
+        if (grupo.getCriador().getId().equals(idNovoLider)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Você já é o líder deste grupo");
+        }
+
+        GrupoMembro novoLider = grupoMembroRepository.findByGrupo_IdAndUsuario_Id(idGrupo, idNovoLider)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "O novo líder precisa ser membro do grupo"));
+        if (!novoLider.getUsuario().isAtivo()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Não é possível passar a liderança para uma conta desativada");
+        }
+
+        grupo.setCriador(novoLider.getUsuario());
+        Grupo grupoAtualizado = grupoRepository.save(grupo);
+
+        notificacaoService.criarParaUsuario(
+                idNovoLider,
+                "GRUPO",
+                "Você é o novo líder",
+                "Agora você é o líder do grupo " + grupo.getNome(),
+                grupo.getId());
+
+        return new GrupoResponseDTO(grupoAtualizado, idUsuarioLogado);
     }
 
     @Transactional

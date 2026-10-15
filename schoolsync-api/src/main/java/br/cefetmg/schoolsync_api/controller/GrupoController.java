@@ -71,6 +71,14 @@ public class GrupoController {
         return ResponseEntity.noContent().build();
     }
 
+    @PutMapping("/grupos/{idGrupo}/lider")
+    public ResponseEntity<GrupoResponseDTO> transferirLideranca(
+            @PathVariable String idGrupo,
+            @RequestParam String idNovoLider
+    ) {
+        return ResponseEntity.ok(grupoService.transferirLideranca(idGrupo, idNovoLider, usuarioAtual.id()));
+    }
+
     @DeleteMapping("/grupos/{idGrupo}/membros/{idUsuarioRemover}")
     public ResponseEntity<Void> removerMembro(
             @PathVariable String idGrupo,

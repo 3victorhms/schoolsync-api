@@ -47,6 +47,11 @@ public class LembreteAtividadeScheduler {
             return;
         }
 
+        // n faz sentido lembrar do prazo de uma atividade q a pessoa já concluiu
+        if ("concluido".equals(caderno.getStatus())) {
+            return;
+        }
+
         int preferencia = configuracaoRepository.findByUsuario_Id(caderno.getUsuario().getId())
                 .map(NotificacaoConfiguracao::getLembreteDias)
                 .orElse(3);

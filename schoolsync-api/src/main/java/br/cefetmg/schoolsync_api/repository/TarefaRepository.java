@@ -11,4 +11,8 @@ public interface TarefaRepository extends JpaRepository<Tarefa, String> {
     List<Tarefa> findByGrupo_IdOrderByDataCriacaoAsc(String idGrupo);
 
     List<Tarefa> findByAtribuidoPara_IdOrderByDataCriacaoAsc(String idUsuario);
+
+    List<Tarefa> findByAtividade_Id(String idAtividade);
+
+    List<Tarefa> findByGrupo_Sala_Id(String idSala);
 }
