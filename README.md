@@ -10,7 +10,7 @@ Gerencia usuários, salas (com matérias e períodos letivos), membros, atividad
 - Spring Web
 - Spring Data JPA
 - Bean Validation
-- Spring Security com JWT (implementação própria em HMAC-SHA256) e senhas com BCrypt
+- Spring Security: login com `AuthenticationManager` + `UserDetailsService`, token JWT com a biblioteca jjwt e senhas com BCrypt
 - PostgreSQL (hospedado no Neon)
 - Lombok
 - Swagger / Springdoc OpenAPI
@@ -33,8 +33,9 @@ As configurações ficam em `schoolsync-api/src/main/resources/application.yaml`
 | `DATABASE_URL` | Não (tem padrão) | URL JDBC do PostgreSQL |
 | `DATABASE_USER` | Sim | Usuário do banco |
 | `DATABASE_PASSWORD` | Sim | Senha do banco |
-| `JWT_SECRET` | Sim | Chave que assina os tokens JWT |
+| `JWT_SECRET` | Sim | Chave que assina os tokens JWT (mínimo de 32 caracteres, exigência do jjwt) |
 | `JWT_EXPIRATION_MS` | Não (padrão 24 h) | Validade do token em milissegundos |
+| `SHOW_SQL` | Não (padrão `false`) | Mostra no log o SQL gerado pelo Hibernate (útil só localmente) |
 | `FIREBASE_ENABLED` | Não (padrão `false`) | Liga o envio de notificações push |
 | `FIREBASE_PROJECT_ID` | Só com Firebase | Id do projeto no Firebase |
 | `FIREBASE_CREDENTIALS_BASE64` | Só com Firebase | JSON da conta de serviço em Base64 |
@@ -74,6 +75,16 @@ docker run -p 8080:8080 -e DATABASE_USER=... -e DATABASE_PASSWORD=... -e JWT_SEC
 3. As demais rotas exigem o cabeçalho `Authorization: Bearer <token>`.
 
 O usuário que faz cada ação vem sempre do token, nunca de um parâmetro da requisição. Rotas em `/admin/**` exigem o perfil `ADMIN`.
+
+## Dados de demonstração
+
+O script `scripts/popular-dados-demo.mjs` cria, pela própria API, uma sala DS3 completa: líder, colegas, matérias, bimestres, atividades, caderno, grupos com tarefas, comentários e boletim. Precisa só do Node 18 ou mais novo.
+
+```bash
+node scripts/popular-dados-demo.mjs --senha SENHA_DO_LIDER
+```
+
+Por padrão ele usa a API publicada; para a API local, acrescente `--api http://localhost:8080`. Se a sala DS3 já existir, o script para sem duplicar nada.
 
 ## Swagger
 

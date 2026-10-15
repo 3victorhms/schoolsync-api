@@ -4,6 +4,7 @@ import br.cefetmg.schoolsync_api.dto.usuario.LoginDTO;
 import br.cefetmg.schoolsync_api.dto.usuario.LoginResponseDTO;
 import br.cefetmg.schoolsync_api.dto.usuario.UsuarioRequestDTO;
 import br.cefetmg.schoolsync_api.dto.usuario.UsuarioResponseDTO;
+import br.cefetmg.schoolsync_api.dto.usuario.UsuarioPublicoDTO;
 import br.cefetmg.schoolsync_api.dto.usuario.ImagemUsuarioDTO;
 import br.cefetmg.schoolsync_api.security.UsuarioAtual;
 import br.cefetmg.schoolsync_api.service.UsuarioService;
@@ -31,9 +32,9 @@ public class UsuarioController {
     private final UsuarioAtual usuarioAtual;
 
     @GetMapping("/{id}")
-    @Operation(summary = "Buscar usuário por ID")
-    public ResponseEntity<UsuarioResponseDTO> buscarPorId(@PathVariable String id) {
-        Optional<UsuarioResponseDTO> usuarioResponseDTO = usuarioService.findOne(id);
+    @Operation(summary = "Buscar os dados públicos de um usuário (id, nome e foto)")
+    public ResponseEntity<UsuarioPublicoDTO> buscarPorId(@PathVariable String id) {
+        Optional<UsuarioPublicoDTO> usuarioResponseDTO = usuarioService.findOne(id);
 
         if (usuarioResponseDTO.isPresent()) {
             return ResponseEntity.ok(usuarioResponseDTO.get());

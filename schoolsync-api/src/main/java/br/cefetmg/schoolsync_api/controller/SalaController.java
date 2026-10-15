@@ -70,6 +70,15 @@ public class SalaController {
         return ResponseEntity.ok(salaService.listarPorUsuario(usuarioAtual.id()));
     }
 
+    @PutMapping("/{idSala}/lider")
+    @Operation(summary = "Transferir a liderança da sala para outro membro (só o líder)")
+    public ResponseEntity<SalaResponseDTO> transferirLideranca(
+            @PathVariable String idSala,
+            @RequestParam String idNovoLider
+    ) {
+        return ResponseEntity.ok(salaService.transferirLideranca(idSala, idNovoLider, usuarioAtual.id()));
+    }
+
     @DeleteMapping("/{idSala}/membros/{idUsuarioRemover}")
     @Operation(summary = "Remover membro da sala (só o líder)")
     public ResponseEntity<Void> excluirMembro(

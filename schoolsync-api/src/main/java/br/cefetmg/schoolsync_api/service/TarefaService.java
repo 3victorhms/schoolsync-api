@@ -119,6 +119,7 @@ public class TarefaService {
         Tarefa tarefa = buscarTarefa(idTarefa);
         grupoService.validarCriadorDoGrupo(tarefa.getGrupo(), idUsuarioLogado);
 
+        notificacaoService.removerPorAlvo(tarefa.getId());
         tarefaRepository.delete(tarefa);
     }
 

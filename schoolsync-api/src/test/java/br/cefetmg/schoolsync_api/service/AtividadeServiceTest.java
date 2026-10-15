@@ -32,6 +32,7 @@ import br.cefetmg.schoolsync_api.repository.AtividadeRepository;
 import br.cefetmg.schoolsync_api.repository.CadernoRepository;
 import br.cefetmg.schoolsync_api.repository.MembrosRepository;
 import br.cefetmg.schoolsync_api.repository.SalaRepository;
+import br.cefetmg.schoolsync_api.repository.TarefaRepository;
 import br.cefetmg.schoolsync_api.repository.UsuarioRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,6 +45,7 @@ class AtividadeServiceTest {
     @Mock private MembrosRepository membrosRepository;
     @Mock private NotificacaoService notificacaoService;
     @Mock private NotaService notaService;
+    @Mock private TarefaRepository tarefaRepository;
     @InjectMocks private AtividadeService atividadeService;
 
     private Sala sala;

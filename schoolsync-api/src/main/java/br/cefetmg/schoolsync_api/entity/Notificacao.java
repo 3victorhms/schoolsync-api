@@ -44,7 +44,7 @@ public class Notificacao {
     private LocalDateTime horario;
 
     // id pra redirecionar a notificação (ex: prazo de atividade chegando ao fim)
-    @Column(name = "target_id", length = 36)
+    @Column(name = "target_id", length = 64)
     private String targetId;
 
     @ManyToOne(fetch = FetchType.LAZY)

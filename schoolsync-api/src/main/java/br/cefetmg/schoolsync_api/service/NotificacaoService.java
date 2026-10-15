@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
@@ -73,6 +74,11 @@ public class NotificacaoService {
 
     @Transactional
     public NotificacaoConfiguracaoDTO salvarConfiguracao(String idUsuario, NotificacaoConfiguracaoDTO dto) {
+        // o agendador só manda lembrete 1, 3 ou 7 dias antes, ent qualquer outro valor nunca dispararia
+        if (dto.getLembreteDias() == null || !Set.of(1, 3, 7).contains(dto.getLembreteDias())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O lembrete deve ser de 1, 3 ou 7 dias antes");
+        }
+
         NotificacaoConfiguracao configuracao = buscarOuCriarConfiguracao(idUsuario);
 
         configuracao.setNoAplicativo(dto.isNoAplicativo());
@@ -148,6 +154,8 @@ public class NotificacaoService {
     public void removerPorAlvo(String targetId) {
         if (targetId != null) {
             notificacaoRepository.deleteByTargetId(targetId);
+            // os lembretes de prazo usam "idAtividade:data:dias" como alvo, ent saem pelo prefixo
+            notificacaoRepository.deleteByTargetIdStartingWith(targetId + ":");
         }
     }
 

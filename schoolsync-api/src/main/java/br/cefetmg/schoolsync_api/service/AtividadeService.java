@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -23,6 +24,8 @@ import br.cefetmg.schoolsync_api.repository.AtividadeRepository;
 import br.cefetmg.schoolsync_api.repository.CadernoRepository;
 import br.cefetmg.schoolsync_api.repository.MembrosRepository;
 import br.cefetmg.schoolsync_api.repository.SalaRepository;
+import br.cefetmg.schoolsync_api.entity.Tarefa;
+import br.cefetmg.schoolsync_api.repository.TarefaRepository;
 import br.cefetmg.schoolsync_api.repository.UsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -34,6 +37,7 @@ import lombok.RequiredArgsConstructor;
 public class AtividadeService {
 
     private static final double VALOR_MAXIMO_POR_ATIVIDADE = 15d;
+    private static final Set<String> STATUS_CADERNO = Set.of("nao_iniciada", "em_andamento", "concluido");
     private static final DateTimeFormatter DATA_BR = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private final AtividadeRepository atividadeRepository;
@@ -43,6 +47,7 @@ public class AtividadeService {
     private final MembrosRepository membrosRepository;
     private final NotificacaoService notificacaoService;
     private final NotaService notaService;
+    private final TarefaRepository tarefaRepository;
 
     @Transactional
     public AtividadeResponseDTO criar(AtividadeRequestDTO dto, String idCriador) {
@@ -99,7 +104,7 @@ public class AtividadeService {
     }
 
     @Transactional
-    public AtividadeResponseDTO atualizar(String id, AtividadeRequestDTO dto) {
+    public AtividadeResponseDTO atualizar(String id, AtividadeRequestDTO dto, String idEditor) {
         Atividade atividade = atividadeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Atividade nao encontrada"));
 
@@ -120,7 +125,7 @@ public class AtividadeService {
 
         notaService.sincronizarComAtividade(atividadeAtualizada);
 
-        notificarAtividadeAtualizada(atividadeAtualizada);
+        notificarAtividadeAtualizada(atividadeAtualizada, idEditor);
 
         return new AtividadeResponseDTO(atividadeAtualizada);
     }
@@ -166,11 +171,12 @@ public class AtividadeService {
         }
     }
 
-    private void notificarAtividadeAtualizada(Atividade atividade) {
+    // avisa todo mundo da sala menos quem fez a edição (pode ser o criador ou o líder)
+    private void notificarAtividadeAtualizada(Atividade atividade, String idEditor) {
         List<Membros> membros = membrosRepository.findBySala_Id(atividade.getSala().getId());
         for (Membros membro : membros) {
             Usuario usuario = membro.getUsuario();
-            if (!usuario.getId().equals(atividade.getCriadaPor().getId()) && usuario.isAtivo()) {
+            if (!usuario.getId().equals(idEditor) && usuario.isAtivo()) {
                 notificacaoService.criarParaUsuario(
                         usuario.getId(),
                         "ATIVIDADE",
@@ -214,7 +220,17 @@ public class AtividadeService {
 
         notificacaoService.removerPorAlvo(id);
         notaService.desvincularDaAtividade(atividade);
+        excluirTarefasDaAtividade(id);
         atividadeRepository.delete(atividade);
+    }
+
+    // as tarefas de grupo apontam pra atividade (id_atividade é obrigatório), ent precisam
+    // sair antes dela, senão o banco recusa a exclusão. o flush manda os deletes na hora
+    private void excluirTarefasDaAtividade(String idAtividade) {
+        List<Tarefa> tarefas = tarefaRepository.findByAtividade_Id(idAtividade);
+        tarefas.forEach(tarefa -> notificacaoService.removerPorAlvo(tarefa.getId()));
+        tarefaRepository.deleteAll(tarefas);
+        tarefaRepository.flush();
     }
 
     @Transactional
@@ -226,6 +242,7 @@ public class AtividadeService {
         atividades.forEach(atividade -> {
             notificacaoService.removerPorAlvo(atividade.getId());
             notaService.desvincularDaAtividade(atividade);
+            excluirTarefasDaAtividade(atividade.getId());
         });
         atividadeRepository.deleteAll(atividades);
         sala.getAtividades().clear();
@@ -261,6 +278,11 @@ public class AtividadeService {
 
     @Transactional
     public void alterarStatus(String idAtividade, String idUsuario, String status) {
+        if (!STATUS_CADERNO.contains(status)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Status inválido: use nao_iniciada, em_andamento ou concluido");
+        }
+
         Caderno caderno = cadernoRepository
                 .findByAtividade_IdAndUsuario_Id(idAtividade, idUsuario)
                 .orElseThrow(() -> new EntityNotFoundException("Atividade nao encontrada no caderno"));
@@ -273,6 +295,9 @@ public class AtividadeService {
     public void validarPodeGerenciar(String idAtividade, String idUsuario) {
         Atividade atividade = atividadeRepository.findById(idAtividade)
                 .orElseThrow(() -> new EntityNotFoundException("Atividade nao encontrada"));
+
+        // quem criou mas saiu ou foi removido da sala n pode mais mexer na atividade
+        validarMembroDaSala(atividade.getSala().getId(), idUsuario);
 
         boolean criador = atividade.getCriadaPor() != null && atividade.getCriadaPor().getId().equals(idUsuario);
         boolean liderDaSala = atividade.getSala().getLider().getId().equals(idUsuario);

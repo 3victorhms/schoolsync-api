@@ -44,8 +44,9 @@ public class AtividadeController {
             @PathVariable String id,
             @Valid @RequestBody AtividadeRequestDTO dto
     ) {
-        atividadeService.validarPodeGerenciar(id, usuarioAtual.id());
-        return ResponseEntity.ok(atividadeService.atualizar(id, dto));
+        String idUsuario = usuarioAtual.id();
+        atividadeService.validarPodeGerenciar(id, idUsuario);
+        return ResponseEntity.ok(atividadeService.atualizar(id, dto, idUsuario));
     }
 
     @GetMapping("/{id}")

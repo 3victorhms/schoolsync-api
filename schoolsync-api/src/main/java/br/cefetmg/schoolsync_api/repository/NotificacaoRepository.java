@@ -19,4 +19,6 @@ public interface NotificacaoRepository extends JpaRepository<Notificacao, String
     boolean existsByUsuario_IdAndTipoAndTargetId(String idUsuario, String tipo, String targetId);
 
     void deleteByTargetId(String targetId);
+
+    void deleteByTargetIdStartingWith(String prefixo);
 }

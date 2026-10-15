@@ -1,6 +1,5 @@
 package br.cefetmg.schoolsync_api.service;
 
-import br.cefetmg.schoolsync_api.security.SenhaEncoder;
 import br.cefetmg.schoolsync_api.security.JwtService;
 import br.cefetmg.schoolsync_api.entity.Usuario;
 import br.cefetmg.schoolsync_api.dto.usuario.*;
@@ -12,6 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,7 +33,8 @@ import java.util.Optional;
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
-    private final SenhaEncoder senhaEncoder;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final SalaRepository salaRepository;
     private final GrupoRepository grupoRepository;
@@ -40,11 +44,13 @@ public class UsuarioService {
 
     private final Logger log = LoggerFactory.getLogger(UsuarioService.class);
 
-    public UsuarioService(UsuarioRepository usuarioRepository, SenhaEncoder senhaEncoder, JwtService jwtService,
+    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
+            AuthenticationManager authenticationManager, JwtService jwtService,
             SalaRepository salaRepository, GrupoRepository grupoRepository, TarefaRepository tarefaRepository,
             DispositivoPushRepository dispositivoPushRepository, CloudinaryService cloudinaryService) {
         this.usuarioRepository = usuarioRepository;
-        this.senhaEncoder = senhaEncoder;
+        this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.salaRepository = salaRepository;
         this.grupoRepository = grupoRepository;
@@ -53,14 +59,14 @@ public class UsuarioService {
         this.cloudinaryService = cloudinaryService;
     }
 
-    public Optional<UsuarioResponseDTO> findOne(String id) {
+    public Optional<UsuarioPublicoDTO> findOne(String id) {
         log.debug("Request to get Usuario : {}", id);
 
         Optional<Usuario> usuarioOpt = usuarioRepository.findById(id);
 
         if (usuarioOpt.isPresent()) {
             Usuario usuario = usuarioOpt.get();
-            return Optional.of(new UsuarioResponseDTO(usuario));
+            return Optional.of(new UsuarioPublicoDTO(usuario));
         } else {
             return Optional.empty();
         }
@@ -92,14 +98,17 @@ public class UsuarioService {
             vinculos.add("liderança de sala");
         if (grupoRepository.existsByCriador_Id(id))
             vinculos.add("liderança de grupo");
-        if (!tarefaRepository.findByAtribuidoPara_IdOrderByDataCriacaoAsc(id).isEmpty()) {
-            vinculos.add("atividades/tarefas atribuídas");
+        // tarefa já concluída n impede, só as q ainda estão pendentes ou em andamento
+        boolean temTarefaAberta = tarefaRepository.findByAtribuidoPara_IdOrderByDataCriacaoAsc(id).stream()
+                .anyMatch(tarefa -> !"concluido".equals(tarefa.getStatus()));
+        if (temTarefaAberta) {
+            vinculos.add("tarefas pendentes atribuídas");
         }
 
         if (!vinculos.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Não foi possível inativar o usuário: resolva " + String.join(", ", vinculos)
-                            + ". Transfira as lideranças e reatribua as atividades antes de tentar novamente.");
+                            + ". Transfira a liderança na tela da sala ou do grupo e conclua as tarefas pendentes antes de tentar novamente.");
         }
 
         // ainda deixa os comentários, histórico e etc, porém alterando o nome para
@@ -125,7 +134,7 @@ public class UsuarioService {
         Usuario usuario = new Usuario();
         usuario.setNome(dto.getNome());
         usuario.setEmail(dto.getEmail());
-        usuario.setSenha(senhaEncoder.criptografar(dto.getSenha()));
+        usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
         usuario.setFoto(dto.getFoto());
 
         usuario = usuarioRepository.save(usuario);
@@ -160,7 +169,7 @@ public class UsuarioService {
         // só atualiza a senha se vier um valor novo e não vazio; senão mantém a senha
         // atual no banco
         if (dto.getSenha() != null && !dto.getSenha().isBlank()) {
-            usuario.setSenha(senhaEncoder.criptografar(dto.getSenha()));
+            usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
         }
 
         if (dto.getFoto() != null) {
@@ -216,22 +225,21 @@ public class UsuarioService {
     public Optional<LoginResponseDTO> autenticar(String email, String senha) {
         log.debug("Request to autenticar Usuario : {}", email);
 
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
-
-        if (usuarioOpt.isPresent()) {
-            Usuario usuario = usuarioOpt.get();
-            if (!usuario.isAtivo()) {
-                return Optional.empty();
-            }
-            if (senhaEncoder.verificar(senha, usuario.getSenha())) {
-                return Optional.of(new LoginResponseDTO(
-                        jwtService.gerarToken(usuario),
-                        new UsuarioResponseDTO(usuario)));
-            }
-            return Optional.empty();
-        } else {
+        // igual na disciplina: o AuthenticationManager busca o usuário pelo UsuarioDetailsService
+        // e compara a senha com o BCrypt. e-mail inexistente, senha errada ou conta desativada
+        // lançam AuthenticationException, e aí o controller responde 401
+        try {
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, senha));
+        } catch (AuthenticationException ex) {
             return Optional.empty();
         }
+
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Login ou senha inválidos"));
+
+        return Optional.of(new LoginResponseDTO(
+                jwtService.gerarToken(usuario),
+                new UsuarioResponseDTO(usuario)));
     }
 
     public boolean verificarLogin(String email) {

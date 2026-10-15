@@ -17,7 +17,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -29,13 +31,13 @@ import br.cefetmg.schoolsync_api.repository.TarefaRepository;
 import br.cefetmg.schoolsync_api.repository.UsuarioRepository;
 import br.cefetmg.schoolsync_api.repository.DispositivoPushRepository;
 import br.cefetmg.schoolsync_api.security.JwtService;
-import br.cefetmg.schoolsync_api.security.SenhaEncoder;
 
 @ExtendWith(MockitoExtension.class)
 class UsuarioServiceTest {
 
     @Mock private UsuarioRepository usuarioRepository;
-    @Mock private SenhaEncoder senhaEncoder;
+    @Mock private PasswordEncoder passwordEncoder;
+    @Mock private AuthenticationManager authenticationManager;
     @Mock private JwtService jwtService;
     @Mock private SalaRepository salaRepository;
     @Mock private GrupoRepository grupoRepository;
@@ -65,8 +67,8 @@ class UsuarioServiceTest {
         assertEquals(409, erro.getStatusCode().value());
         assertTrue(erro.getReason().contains("liderança de sala"));
         assertTrue(erro.getReason().contains("liderança de grupo"));
-        assertTrue(erro.getReason().contains("atividades/tarefas atribuídas"));
-        assertTrue(erro.getReason().contains("Transfira as lideranças e reatribua as atividades"));
+        assertTrue(erro.getReason().contains("tarefas pendentes atribuídas"));
+        assertTrue(erro.getReason().contains("Transfira a liderança na tela da sala ou do grupo"));
         verify(usuarioRepository, never()).save(usuario);
     }
 

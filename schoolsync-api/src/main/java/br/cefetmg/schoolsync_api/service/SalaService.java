@@ -35,6 +35,8 @@ import br.cefetmg.schoolsync_api.repository.CadernoRepository;
 import br.cefetmg.schoolsync_api.repository.MembrosRepository;
 import br.cefetmg.schoolsync_api.repository.NotaRepository;
 import br.cefetmg.schoolsync_api.repository.SalaRepository;
+import br.cefetmg.schoolsync_api.entity.Tarefa;
+import br.cefetmg.schoolsync_api.repository.TarefaRepository;
 import br.cefetmg.schoolsync_api.repository.UsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -50,6 +52,8 @@ public class SalaService {
     private final UsuarioRepository usuarioRepository;
     private final MembrosRepository membrosRepository;
     private final CadernoRepository cadernoRepository;
+    private final TarefaRepository tarefaRepository;
+    private final NotificacaoService notificacaoService;
     private final AtividadeRepository atividadeRepository;
     private final NotaRepository notaRepository;
     private final GrupoService grupoService;
@@ -256,7 +260,8 @@ public class SalaService {
 
     @Transactional
     public SalaResponseDTO entrar(String codigoConvite, String idUsuario) {
-        Sala sala = salaRepository.findByCodigoConviteForUpdate(codigoConvite)
+        // os códigos são gerados em maiúsculas, ent "a3f9c1" tbm tem q achar a sala "A3F9C1"
+        Sala sala = salaRepository.findByCodigoConviteForUpdate(codigoConvite.trim().toUpperCase(Locale.ROOT))
                 .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
 
         Usuario usuario = usuarioRepository.findById(idUsuario)
@@ -318,7 +323,53 @@ public class SalaService {
                 .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
 
         notaRepository.deleteBySala(sala.getId());
+
+        // as tarefas dos grupos apontam pras atividades da sala. sem apagar elas antes,
+        // o hibernate tenta excluir as atividades primeiro e o banco recusa
+        List<Tarefa> tarefas = tarefaRepository.findByGrupo_Sala_Id(sala.getId());
+        tarefas.forEach(tarefa -> notificacaoService.removerPorAlvo(tarefa.getId()));
+        tarefaRepository.deleteAll(tarefas);
+        tarefaRepository.flush();
+
+        // tira as notificações que apontam pra atividades e grupos q vão deixar de existir
+        sala.getAtividades().forEach(atividade -> notificacaoService.removerPorAlvo(atividade.getId()));
+        sala.getGrupos().forEach(grupo -> notificacaoService.removerPorAlvo(grupo.getId()));
+
         salaRepository.delete(sala);
+    }
+
+    // o líder passa a liderança pra outro membro da sala. depois disso ele vira um membro comum,
+    // e pode sair da sala ou desativar a conta
+    @Transactional
+    public SalaResponseDTO transferirLideranca(String idSala, String idNovoLider, String idUsuarioLogado) {
+        Sala sala = salaRepository.findById(idSala)
+                .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
+
+        if (!sala.getLider().getId().equals(idUsuarioLogado)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas o líder da sala pode transferir a liderança");
+        }
+        if (sala.getLider().getId().equals(idNovoLider)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Você já é o líder desta sala");
+        }
+
+        Membros novoLider = membrosRepository.findBySala_IdAndUsuario_Id(idSala, idNovoLider)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "O novo líder precisa ser membro da sala"));
+        if (!novoLider.getUsuario().isAtivo()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Não é possível passar a liderança para uma conta desativada");
+        }
+
+        sala.setLider(novoLider.getUsuario());
+        Sala salaAtualizada = salaRepository.save(sala);
+
+        notificacaoService.criarParaUsuario(
+                idNovoLider,
+                "SALA",
+                "Você é o novo líder",
+                "Agora você é o líder da sala " + sala.getNome(),
+                sala.getId());
+
+        return new SalaResponseDTO(salaAtualizada, buscarStatusPorAtividade(idSala, idUsuarioLogado));
     }
 
     @Transactional
