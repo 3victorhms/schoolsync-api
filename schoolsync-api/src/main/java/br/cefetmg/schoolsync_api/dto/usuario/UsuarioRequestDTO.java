@@ -26,6 +26,7 @@ public class UsuarioRequestDTO {
   @Size(min = 8, max = 72, message = "A senha deve ter entre 8 e 72 caracteres")
   private String senha;
 
-  @Size(max = 750000, message = "A foto de perfil é muito grande")
-  private String foto;
+  // obrigatória só pra trocar o e-mail ou a senha (confere q é o dono da conta mesmo)
+  @Size(max = 72, message = "A senha atual deve ter no máximo 72 caracteres")
+  private String senhaAtual;
 }

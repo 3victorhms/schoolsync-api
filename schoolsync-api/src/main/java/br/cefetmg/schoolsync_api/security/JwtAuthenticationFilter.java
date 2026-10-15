@@ -2,6 +2,8 @@ package br.cefetmg.schoolsync_api.security;
 
 import java.io.IOException;
 import java.util.List;
+import java.time.ZoneId;
+import java.util.Date;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -45,7 +47,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             if (jwtService.tokenValido(token)) {
                 String idUsuario = jwtService.extrairIdUsuario(token);
-                usuarioRepository.findById(idUsuario).ifPresent(this::autenticar);
+                String tokenAtual = token;
+                usuarioRepository.findById(idUsuario)
+                        .filter(usuario -> !emitidoAntesDaTrocaDeCredenciais(tokenAtual, usuario))
+                        .ifPresent(this::autenticar);
             }
         }
 
@@ -55,6 +60,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private boolean ehStreamDeNotificacoes(HttpServletRequest request) {
         return "GET".equals(request.getMethod())
                 && request.getRequestURI().endsWith("/notificacoes/stream");
+    }
+
+    // se o e-mail ou a senha mudaram depois que o token foi gerado, ele n vale mais.
+    // a comparação é em segundos pq o iat do token só guarda segundos
+    private boolean emitidoAntesDaTrocaDeCredenciais(String token, Usuario usuario) {
+        if (usuario.getCredenciaisAlteradasEm() == null) {
+            return false;
+        }
+        Date emitidoEm = jwtService.extrairEmitidoEm(token);
+        if (emitidoEm == null) {
+            return true;
+        }
+        long alteradoEm = usuario.getCredenciaisAlteradasEm().atZone(ZoneId.systemDefault()).toEpochSecond();
+        return emitidoEm.getTime() / 1000 < alteradoEm;
     }
 
     private void autenticar(Usuario usuario) {

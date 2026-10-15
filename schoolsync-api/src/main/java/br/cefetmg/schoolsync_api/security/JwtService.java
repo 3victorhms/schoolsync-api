@@ -60,6 +60,10 @@ public class JwtService {
         return getClaims(token).getSubject();
     }
 
+    public Date extrairEmitidoEm(String token) {
+        return getClaims(token).getIssuedAt();
+    }
+
     private Claims getClaims(String token) {
         return Jwts.parser()
                 .verifyWith(chave)
