@@ -24,6 +24,7 @@ import br.cefetmg.schoolsync_api.repository.TarefaRepository;
 import br.cefetmg.schoolsync_api.repository.DispositivoPushRepository;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -135,7 +136,6 @@ public class UsuarioService {
         usuario.setNome(dto.getNome());
         usuario.setEmail(dto.getEmail());
         usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
-        usuario.setFoto(dto.getFoto());
 
         usuario = usuarioRepository.save(usuario);
         return new UsuarioResponseDTO(usuario);
@@ -163,21 +163,48 @@ public class UsuarioService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email já cadastrado");
         }
 
+        boolean trocaEmail = !dto.getEmail().equalsIgnoreCase(usuario.getEmail());
+        boolean trocaSenha = dto.getSenha() != null && !dto.getSenha().isBlank();
+
+        // pra trocar e-mail ou senha precisa confirmar a senha atual. é 400 e n 403
+        // pq o app trata 401/403 como sessão encerrada e mandaria a pessoa pro login
+        if (trocaEmail || trocaSenha) {
+            if (dto.getSenhaAtual() == null || dto.getSenhaAtual().isBlank()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Informe sua senha atual para trocar o e-mail ou a senha");
+            }
+            if (!passwordEncoder.matches(dto.getSenhaAtual(), usuario.getSenha())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Senha atual incorreta");
+            }
+        }
+
         usuario.setNome(dto.getNome());
         usuario.setEmail(dto.getEmail());
 
         // só atualiza a senha se vier um valor novo e não vazio; senão mantém a senha
         // atual no banco
-        if (dto.getSenha() != null && !dto.getSenha().isBlank()) {
+        if (trocaSenha) {
             usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
         }
 
-        if (dto.getFoto() != null) {
-            usuario.setFoto(dto.getFoto());
+        // os tokens gerados antes disso param de valer (ver JwtAuthenticationFilter)
+        if (trocaEmail || trocaSenha) {
+            usuario.setCredenciaisAlteradasEm(LocalDateTime.now());
         }
+
+        // a foto n muda por aqui: só pelas rotas de upload (/me/imagem e /me/foto) ou de remover (DELETE /me/foto)
 
         usuario = usuarioRepository.save(usuario);
         return new UsuarioResponseDTO(usuario);
+    }
+
+    @Transactional
+    public UsuarioResponseDTO removerFoto(String id) {
+        validarSolicitante(id, "alterar");
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+        usuario.setFoto(null);
+        return new UsuarioResponseDTO(usuarioRepository.save(usuario));
     }
 
     @Transactional

@@ -89,6 +89,12 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.atualizarFotoPorArquivo(usuarioAtual.id(), arquivo));
     }
 
+    @DeleteMapping("/me/foto")
+    @Operation(summary = "Remover a foto de perfil do usuário logado")
+    public ResponseEntity<UsuarioResponseDTO> removerFoto() {
+        return ResponseEntity.ok(usuarioService.removerFoto(usuarioAtual.id()));
+    }
+
     @DeleteMapping("/me")
     @Operation(summary = "Desativar a conta do usuário logado")
     public ResponseEntity<Void> excluir() {
