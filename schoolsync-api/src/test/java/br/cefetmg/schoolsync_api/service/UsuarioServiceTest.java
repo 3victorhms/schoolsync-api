@@ -23,6 +23,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.server.ResponseStatusException;
 
+import br.cefetmg.schoolsync_api.dto.usuario.UsuarioResponseDTO;
+import br.cefetmg.schoolsync_api.entity.Perfil;
 import br.cefetmg.schoolsync_api.entity.Tarefa;
 import br.cefetmg.schoolsync_api.entity.Usuario;
 import br.cefetmg.schoolsync_api.repository.GrupoRepository;
@@ -86,6 +88,53 @@ class UsuarioServiceTest {
         verify(usuarioRepository).save(usuario);
         verify(dispositivoPushRepository).deleteAllByUsuario_Id(usuario.getId());
         verify(usuarioRepository, never()).delete(usuario);
+    }
+
+    @Test
+    void adminPromoveOutroUsuarioAAdmin() {
+        usuarioAutenticado();
+        Usuario outro = new Usuario();
+        outro.setId("usuario-2");
+        outro.setAtivo(true);
+        outro.setPerfil(Perfil.USUARIO);
+        when(usuarioRepository.findById("usuario-2")).thenReturn(Optional.of(outro));
+        when(usuarioRepository.save(outro)).thenReturn(outro);
+
+        UsuarioResponseDTO resposta = usuarioService.alterarPerfil("usuario-2", Perfil.ADMIN);
+
+        assertEquals(Perfil.ADMIN, resposta.getPerfil());
+        verify(usuarioRepository).save(outro);
+    }
+
+    @Test
+    void adminNaoPodeAlterarOProprioPerfil() {
+        Usuario admin = usuarioAutenticado();
+        admin.setPerfil(Perfil.ADMIN);
+        when(usuarioRepository.findById(admin.getId())).thenReturn(Optional.of(admin));
+
+        ResponseStatusException erro = assertThrows(
+                ResponseStatusException.class,
+                () -> usuarioService.alterarPerfil(admin.getId(), Perfil.USUARIO));
+
+        assertEquals(400, erro.getStatusCode().value());
+        assertEquals(Perfil.ADMIN, admin.getPerfil());
+        verify(usuarioRepository, never()).save(admin);
+    }
+
+    @Test
+    void naoAlteraPerfilDeContaDesativada() {
+        usuarioAutenticado();
+        Usuario inativo = new Usuario();
+        inativo.setId("usuario-3");
+        inativo.setAtivo(false);
+        when(usuarioRepository.findById("usuario-3")).thenReturn(Optional.of(inativo));
+
+        ResponseStatusException erro = assertThrows(
+                ResponseStatusException.class,
+                () -> usuarioService.alterarPerfil("usuario-3", Perfil.ADMIN));
+
+        assertEquals(409, erro.getStatusCode().value());
+        verify(usuarioRepository, never()).save(inativo);
     }
 
     private Usuario usuarioAutenticado() {

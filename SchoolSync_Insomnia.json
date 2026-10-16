@@ -34,7 +34,9 @@
         "codigo_convite": "{% response 'body', 'req_ss_13', 'b64::JC5jb2RpZ29Db252aXRl::46b', 'never', 60 %}",
         "materia_matematica": "{% response 'body', 'req_ss_13', 'b64::JC5tYXRlcmlhc1swXS5pZA==::46b', 'never', 60 %}",
         "materia_portugues": "{% response 'body', 'req_ss_13', 'b64::JC5tYXRlcmlhc1sxXS5pZA==::46b', 'never', 60 %}",
-        "atividade_id": "{% response 'body', 'req_ss_20', 'b64::JC5pZA==::46b', 'never', 60 %}"
+        "atividade_id": "{% response 'body', 'req_ss_20', 'b64::JC5pZA==::46b', 'never', 60 %}",
+        "usuario_id": "{% response 'body', 'req_ss_05', 'b64::JC51c3VhcmlvLmlk::46b', 'no-history', 60 %}",
+        "admin_id": "{% response 'body', 'req_ss_06', 'b64::JC51c3VhcmlvLmlk::46b', 'no-history', 60 %}"
       },
       "dataPropertyOrder": {
         "&": [
@@ -44,6 +46,8 @@
           "senha_admin",
           "token_usuario",
           "token_admin",
+          "usuario_id",
+          "admin_id",
           "sala_id",
           "codigo_convite",
           "materia_matematica",
@@ -511,6 +515,158 @@
       "settingFollowRedirects": "global",
       "preRequestScript": "",
       "afterResponseScript": "insomnia.test('Status 200', () => {\n  insomnia.expect(insomnia.response.code).to.equal(200);\n});\ninsomnia.test('Devolve uma lista', () => {\n  insomnia.expect(insomnia.response.json()).to.be.an('array');\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_12a",
+      "_type": "request",
+      "parentId": "fld_ss_4",
+      "name": "Usuário comum tenta virar ADMIN (sem permissão)",
+      "description": "Só um ADMIN pode mudar perfis: a rota fica em /admin/** e o usuário comum recebe 403.",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/admin/usuarios/{{ _.usuario_id }}/perfil",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"perfil\": \"ADMIN\"\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_usuario }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -983.8,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 403', () => {\n  insomnia.expect(insomnia.response.code).to.equal(403);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_12b",
+      "_type": "request",
+      "parentId": "fld_ss_4",
+      "name": "Admin promove o usuário comum a ADMIN",
+      "description": "PUT /admin/usuarios/{id}/perfil com {\"perfil\": \"ADMIN\"}. Vale na hora: o filtro JWT relê o perfil do banco a cada requisição.",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/admin/usuarios/{{ _.usuario_id }}/perfil",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"perfil\": \"ADMIN\"\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_admin }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -983.6,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 200', () => {\n  insomnia.expect(insomnia.response.code).to.equal(200);\n});\ninsomnia.test('Agora é ADMIN', () => {\n  insomnia.expect(insomnia.response.json().perfil).to.equal('ADMIN');\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_12c",
+      "_type": "request",
+      "parentId": "fld_ss_4",
+      "name": "Admin volta o usuário para USUARIO",
+      "description": "Desfaz a promoção anterior, para a demonstração poder ser repetida.",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/admin/usuarios/{{ _.usuario_id }}/perfil",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"perfil\": \"USUARIO\"\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_admin }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -983.4,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 200', () => {\n  insomnia.expect(insomnia.response.code).to.equal(200);\n});\ninsomnia.test('Voltou a ser USUARIO', () => {\n  insomnia.expect(insomnia.response.json().perfil).to.equal('USUARIO');\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_12d",
+      "_type": "request",
+      "parentId": "fld_ss_4",
+      "name": "Admin tenta mudar o próprio perfil",
+      "description": "A API não deixa o admin mudar o próprio cargo (400), assim o sistema nunca fica sem administrador.",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/admin/usuarios/{{ _.admin_id }}/perfil",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"perfil\": \"USUARIO\"\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_admin }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -983.2,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 400', () => {\n  insomnia.expect(insomnia.response.code).to.equal(400);\n});",
       "created": 1,
       "modified": 1
     },

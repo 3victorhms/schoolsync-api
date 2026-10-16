@@ -1,6 +1,7 @@
 package br.cefetmg.schoolsync_api.service;
 
 import br.cefetmg.schoolsync_api.security.JwtService;
+import br.cefetmg.schoolsync_api.entity.Perfil;
 import br.cefetmg.schoolsync_api.entity.Usuario;
 import br.cefetmg.schoolsync_api.dto.usuario.*;
 import br.cefetmg.schoolsync_api.repository.UsuarioRepository;
@@ -238,6 +239,28 @@ public class UsuarioService {
         String tipo = arquivo.getContentType() == null ? "" : arquivo.getContentType();
         String dataUri = "data:" + tipo + ";base64," + Base64.getEncoder().encodeToString(bytes);
         return atualizarImagem(id, dataUri);
+    }
+
+    // só um ADMIN chega aqui (a rota fica em /admin/** e o SecurityConfig exige hasRole("ADMIN"))
+    @Transactional
+    public UsuarioResponseDTO alterarPerfil(String id, Perfil novoPerfil) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+
+        // o admin n pode mudar o proprio cargo, assim o sistema nunca fica sem nenhum admin
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication == null ? null : authentication.getPrincipal();
+        if (principal instanceof Usuario admin && admin.getId().equals(id)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Você não pode alterar o próprio perfil. Peça para outro administrador.");
+        }
+
+        if (!usuario.isAtivo()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Usuário inativo não pode ser alterado");
+        }
+
+        usuario.setPerfil(novoPerfil);
+        return new UsuarioResponseDTO(usuarioRepository.save(usuario));
     }
 
     private void validarSolicitante(String id, String acao) {

@@ -86,6 +86,8 @@ node scripts/popular-dados-demo.mjs --senha SENHA_DO_LIDER
 
 Por padrão ele usa a API publicada; para a API local, acrescente `--api http://localhost:8080`. Se a sala DS3 já existir, o script para sem duplicar nada.
 
+Para ter uma conta de cada perfil, rode `scripts/contas-admin-e-usuario.sql` no editor SQL do Neon: ele cria `vhadmin@gmail.com` (ADMIN) e `vhusuario@gmail.com` (USUARIO). O primeiro admin só pode ser criado pelo banco, de propósito. Depois disso, um ADMIN promove ou rebaixa outras contas por `PUT /admin/usuarios/{id}/perfil` com `{"perfil": "ADMIN"}` ou `{"perfil": "USUARIO"}` (ou pelo botão no painel do administrador do app). Ninguém pode mudar o próprio perfil.
+
 ## Swagger
 
 ```
