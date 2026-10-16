@@ -14,6 +14,7 @@ public class GrupoResumoDTO {
     private String codigoConvite;
     private int quantidadeMembros;
     private int quantidadeTarefas;
+    private int quantidadeTarefasConcluidas;
     private boolean criador;
 
     public GrupoResumoDTO(Grupo grupo, String idUsuarioLogado) {
@@ -25,6 +26,10 @@ public class GrupoResumoDTO {
         this.codigoConvite = grupo.getCodigoConvite();
         this.quantidadeMembros = grupo.getMembros().size();
         this.quantidadeTarefas = grupo.getTarefas().size();
+        // pra barrinha de progresso do grupo na tela da sala
+        this.quantidadeTarefasConcluidas = (int) grupo.getTarefas().stream()
+                .filter(tarefa -> "concluido".equals(tarefa.getStatus()))
+                .count();
         this.criador = grupo.getCriador().getId().equals(idUsuarioLogado);
     }
 }
