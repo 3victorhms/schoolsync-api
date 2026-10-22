@@ -14,6 +14,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -23,6 +24,7 @@ import org.springframework.web.server.ResponseStatusException;
 import br.cefetmg.schoolsync_api.dto.nota.NotaRequestDTO;
 import br.cefetmg.schoolsync_api.dto.nota.NotaResponseDTO;
 import br.cefetmg.schoolsync_api.entity.Atividade;
+import br.cefetmg.schoolsync_api.entity.Caderno;
 import br.cefetmg.schoolsync_api.entity.Materia;
 import br.cefetmg.schoolsync_api.entity.Nota;
 import br.cefetmg.schoolsync_api.entity.Periodo;
@@ -30,6 +32,7 @@ import br.cefetmg.schoolsync_api.entity.Sala;
 import br.cefetmg.schoolsync_api.entity.TipoPeriodo;
 import br.cefetmg.schoolsync_api.entity.Usuario;
 import br.cefetmg.schoolsync_api.repository.AtividadeRepository;
+import br.cefetmg.schoolsync_api.repository.CadernoRepository;
 import br.cefetmg.schoolsync_api.repository.MembrosRepository;
 import br.cefetmg.schoolsync_api.repository.NotaRepository;
 import br.cefetmg.schoolsync_api.repository.SalaRepository;
@@ -43,6 +46,7 @@ class NotaServiceTest {
     @Mock private AtividadeRepository atividadeRepository;
     @Mock private UsuarioRepository usuarioRepository;
     @Mock private MembrosRepository membrosRepository;
+    @Mock private CadernoRepository cadernoRepository;
     @InjectMocks private NotaService notaService;
 
     private Sala sala;
@@ -150,5 +154,61 @@ class NotaServiceTest {
 
         assertEquals(HttpStatus.BAD_REQUEST, erro.getStatusCode());
         verify(notaRepository, never()).save(any());
+        verify(cadernoRepository, never()).save(any());
+    }
+
+    private NotaRequestDTO notaDaAtividade(double valorObtido) {
+        NotaRequestDTO dto = new NotaRequestDTO();
+        dto.setIdAtividade("atividade-1");
+        dto.setValorObtido(valorObtido);
+        return dto;
+    }
+
+    @Test
+    void lancarNotaConcluiAAtividadeQueJaEstavaNoCaderno() {
+        Atividade atividade = atividadeDaSala(10d);
+        Caderno caderno = new Caderno();
+        caderno.setAtividade(atividade);
+        caderno.setUsuario(aluno);
+        caderno.setStatus("em_andamento");
+        when(atividadeRepository.findById("atividade-1")).thenReturn(Optional.of(atividade));
+        when(notaRepository.findByAtividade_IdAndUsuario_Id("atividade-1", "aluno-1")).thenReturn(Optional.empty());
+        when(notaRepository.save(any(Nota.class))).thenAnswer(invocacao -> invocacao.getArgument(0));
+        when(cadernoRepository.findByAtividade_IdAndUsuario_Id("atividade-1", "aluno-1")).thenReturn(Optional.of(caderno));
+
+        notaService.lancar("sala-1", notaDaAtividade(8d), "aluno-1");
+
+        assertEquals("concluido", caderno.getStatus());
+        verify(cadernoRepository).save(caderno);
+    }
+
+    @Test
+    void lancarNotaColocaAAtividadeNoCadernoJaConcluida() {
+        Atividade atividade = atividadeDaSala(10d);
+        when(atividadeRepository.findById("atividade-1")).thenReturn(Optional.of(atividade));
+        when(notaRepository.findByAtividade_IdAndUsuario_Id("atividade-1", "aluno-1")).thenReturn(Optional.empty());
+        when(notaRepository.save(any(Nota.class))).thenAnswer(invocacao -> invocacao.getArgument(0));
+        when(cadernoRepository.findByAtividade_IdAndUsuario_Id("atividade-1", "aluno-1")).thenReturn(Optional.empty());
+
+        notaService.lancar("sala-1", notaDaAtividade(8d), "aluno-1");
+
+        ArgumentCaptor<Caderno> salvo = ArgumentCaptor.forClass(Caderno.class);
+        verify(cadernoRepository).save(salvo.capture());
+        assertEquals("concluido", salvo.getValue().getStatus());
+        assertEquals(atividade, salvo.getValue().getAtividade());
+        assertEquals(aluno, salvo.getValue().getUsuario());
+    }
+
+    @Test
+    void notaAvulsaNaoMexeNoCaderno() {
+        when(atividadeRepository.findByMateria_IdAndPeriodo_Id("materia-1", "periodo-1"))
+                .thenReturn(List.of(atividadeDaSala(15d)));
+        when(notaRepository.findByUsuario_IdAndMateria_IdAndPeriodo_IdAndAtividadeIsNull("aluno-1", "materia-1", "periodo-1"))
+                .thenReturn(List.of());
+        when(notaRepository.save(any(Nota.class))).thenAnswer(invocacao -> invocacao.getArgument(0));
+
+        notaService.lancar("sala-1", avulsa(10d, 8d), "aluno-1");
+
+        verify(cadernoRepository, never()).save(any());
     }
 }

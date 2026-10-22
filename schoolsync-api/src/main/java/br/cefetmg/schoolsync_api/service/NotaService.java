@@ -13,12 +13,14 @@ import org.springframework.web.server.ResponseStatusException;
 import br.cefetmg.schoolsync_api.dto.nota.NotaRequestDTO;
 import br.cefetmg.schoolsync_api.dto.nota.NotaResponseDTO;
 import br.cefetmg.schoolsync_api.entity.Atividade;
+import br.cefetmg.schoolsync_api.entity.Caderno;
 import br.cefetmg.schoolsync_api.entity.Materia;
 import br.cefetmg.schoolsync_api.entity.Nota;
 import br.cefetmg.schoolsync_api.entity.Periodo;
 import br.cefetmg.schoolsync_api.entity.Sala;
 import br.cefetmg.schoolsync_api.entity.Usuario;
 import br.cefetmg.schoolsync_api.repository.AtividadeRepository;
+import br.cefetmg.schoolsync_api.repository.CadernoRepository;
 import br.cefetmg.schoolsync_api.repository.MembrosRepository;
 import br.cefetmg.schoolsync_api.repository.NotaRepository;
 import br.cefetmg.schoolsync_api.repository.SalaRepository;
@@ -38,6 +40,7 @@ public class NotaService {
     private final AtividadeRepository atividadeRepository;
     private final UsuarioRepository usuarioRepository;
     private final MembrosRepository membrosRepository;
+    private final CadernoRepository cadernoRepository;
 
     @Transactional(readOnly = true)
     public List<NotaResponseDTO> listarMinhasDaSala(String idSala, String idUsuario) {
@@ -77,7 +80,27 @@ public class NotaService {
         }
 
         nota.setValorObtido(validarValorObtido(dto.getValorObtido(), nota.getValorMaximo()));
-        return new NotaResponseDTO(notaRepository.save(nota));
+        Nota salva = notaRepository.save(nota);
+
+        if (salva.getAtividade() != null) {
+            concluirNoCaderno(salva.getAtividade(), usuario);
+        }
+        return new NotaResponseDTO(salva);
+    }
+
+    // quem recebeu nota já entregou a atividade, entao ela fica concluída no caderno do aluno.
+    // se ela ainda n estava no caderno, entra já concluída (assim o calendario, as arquivadas e o progresso batem com o boletim)
+    private void concluirNoCaderno(Atividade atividade, Usuario usuario) {
+        Caderno caderno = cadernoRepository.findByAtividade_IdAndUsuario_Id(atividade.getId(), usuario.getId())
+                .orElseGet(() -> {
+                    Caderno novo = new Caderno();
+                    novo.setAtividade(atividade);
+                    novo.setUsuario(usuario);
+                    novo.setDataAdicionado(LocalDateTime.now());
+                    return novo;
+                });
+        caderno.setStatus("concluido");
+        cadernoRepository.save(caderno);
     }
 
     @Transactional
