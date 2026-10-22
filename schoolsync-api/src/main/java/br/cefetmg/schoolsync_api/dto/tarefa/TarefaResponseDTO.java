@@ -1,5 +1,6 @@
 package br.cefetmg.schoolsync_api.dto.tarefa;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import br.cefetmg.schoolsync_api.entity.Tarefa;
@@ -12,6 +13,7 @@ public class TarefaResponseDTO {
     private String titulo;
     private String status;
     private LocalDateTime dataCriacao;
+    private LocalDate prazo;
     private String idGrupo;
     private String idAtividade;
     private String tituloAtividade;
@@ -26,6 +28,7 @@ public class TarefaResponseDTO {
         this.titulo = tarefa.getTitulo();
         this.status = tarefa.getStatus();
         this.dataCriacao = tarefa.getDataCriacao();
+        this.prazo = tarefa.getPrazo();
         this.idGrupo = tarefa.getGrupo().getId();
         this.idAtividade = tarefa.getAtividade().getId();
         this.tituloAtividade = tarefa.getAtividade().getTitulo();

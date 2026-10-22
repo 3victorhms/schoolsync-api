@@ -1,5 +1,7 @@
 package br.cefetmg.schoolsync_api.dto.tarefa;
 
+import java.time.LocalDate;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -18,4 +20,7 @@ public class TarefaRequestDTO {
 
     @NotBlank
     private String idUsuarioAtribuido;
+
+    // opcional: até quando essa parte tem q ficar pronta
+    private LocalDate prazo;
 }
