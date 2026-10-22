@@ -1,5 +1,6 @@
 package br.cefetmg.schoolsync_api.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,4 +22,7 @@ public interface NotificacaoRepository extends JpaRepository<Notificacao, String
     void deleteByTargetId(String targetId);
 
     void deleteByTargetIdStartingWith(String prefixo);
+
+    // limpeza: notificações já lidas e mais antigas que a data
+    long deleteByLidoTrueAndHorarioBefore(LocalDateTime limite);
 }

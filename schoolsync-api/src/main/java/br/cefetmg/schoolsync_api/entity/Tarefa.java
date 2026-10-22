@@ -1,5 +1,6 @@
 package br.cefetmg.schoolsync_api.entity;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
@@ -36,6 +37,10 @@ public class Tarefa {
 
     @Column(name = "data_criacao", nullable = false)
     private LocalDateTime dataCriacao;
+
+    // prazo da parte de cada um (opcional). n pode passar da entrega da atividade
+    @Column(name = "prazo")
+    private LocalDate prazo;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_grupo", nullable = false)
