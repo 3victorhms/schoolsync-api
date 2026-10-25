@@ -39,7 +39,8 @@ public class SecurityConfig {
                         .accessDeniedHandler(respostasDeSeguranca))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/usuarios", "/usuarios/autenticar").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/usuarios", "/usuarios/autenticar",
+                                "/usuarios/senha/esqueci", "/usuarios/senha/redefinir").permitAll()
                         .requestMatchers(HttpMethod.GET, "/usuarios/verificar-login").permitAll()
                         // o stream fica liberado aqui só pra n quebrar o envio assíncrono do SSE,
                         // mas sem token válido na url o controller responde 401 (pelo UsuarioAtual)

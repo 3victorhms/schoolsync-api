@@ -6,7 +6,10 @@ import br.cefetmg.schoolsync_api.dto.usuario.UsuarioRequestDTO;
 import br.cefetmg.schoolsync_api.dto.usuario.UsuarioResponseDTO;
 import br.cefetmg.schoolsync_api.dto.usuario.UsuarioPublicoDTO;
 import br.cefetmg.schoolsync_api.dto.usuario.ImagemUsuarioDTO;
+import br.cefetmg.schoolsync_api.dto.usuario.RedefinirSenhaDTO;
+import br.cefetmg.schoolsync_api.dto.usuario.SolicitarRecuperacaoSenhaDTO;
 import br.cefetmg.schoolsync_api.security.UsuarioAtual;
+import br.cefetmg.schoolsync_api.service.RecuperacaoSenhaService;
 import br.cefetmg.schoolsync_api.service.UsuarioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +33,7 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
     private final UsuarioAtual usuarioAtual;
+    private final RecuperacaoSenhaService recuperacaoSenhaService;
 
     @GetMapping("/{id}")
     @Operation(summary = "Buscar os dados públicos de um usuário (id, nome e foto)")
@@ -63,6 +67,22 @@ public class UsuarioController {
             return ResponseEntity.ok(login.get());
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    // feito com auxílio do Claude: recuperação de senha por código no e-mail.
+    // responde 204 mesmo se o e-mail n tiver conta, pra n revelar quem está cadastrado
+    @PostMapping("/senha/esqueci")
+    @Operation(summary = "Enviar por e-mail um código para redefinir a senha")
+    public ResponseEntity<Void> esqueciSenha(@Valid @RequestBody SolicitarRecuperacaoSenhaDTO dto) {
+        recuperacaoSenhaService.solicitar(dto.getEmail());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/senha/redefinir")
+    @Operation(summary = "Redefinir a senha com o código recebido por e-mail")
+    public ResponseEntity<Void> redefinirSenha(@Valid @RequestBody RedefinirSenhaDTO dto) {
+        recuperacaoSenhaService.redefinir(dto.getEmail(), dto.getCodigo(), dto.getNovaSenha());
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/verificar-login")
