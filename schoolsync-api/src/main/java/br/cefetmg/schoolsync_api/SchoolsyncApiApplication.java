@@ -8,10 +8,11 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import br.cefetmg.schoolsync_api.config.CloudinaryProperties;
+import br.cefetmg.schoolsync_api.config.RecuperacaoSenhaProperties;
 
 @SpringBootApplication
 @EnableScheduling
-@EnableConfigurationProperties(CloudinaryProperties.class)
+@EnableConfigurationProperties({ CloudinaryProperties.class, RecuperacaoSenhaProperties.class })
 public class SchoolsyncApiApplication {
 
 	public static void main(String[] args) {

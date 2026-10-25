@@ -35,6 +35,15 @@ firebase:
   project-id: ${FIREBASE_PROJECT_ID:}
   credentials-base64: ${FIREBASE_CREDENTIALS_BASE64:}
 
+# recuperação de senha (feito com auxílio do Claude). O e-mail sai pela API da Brevo
+# porque o plano gratuito do Render bloqueia SMTP. Sem BREVO_API_KEY e EMAIL_REMETENTE
+# a rota responde 503 e o resto da API funciona normalmente.
+recuperacao-senha:
+  brevo-api-key: ${BREVO_API_KEY:}
+  remetente-email: ${EMAIL_REMETENTE:}
+  remetente-nome: ${EMAIL_REMETENTE_NOME:SchoolSync}
+  validade-minutos: ${RECUPERACAO_SENHA_VALIDADE_MINUTOS:15}
+
 cloudinary:
   cloud-name: ${CLOUDINARY_CLOUD_NAME:}
   api-key: ${CLOUDINARY_API_KEY:}
