@@ -53,7 +53,7 @@ class AtividadeServiceTest {
     private Materia matematica;
     private Periodo primeiroBimestre;
 
-    /** Sala por bimestre: 1º bimestre de 01/02 a 30/04 valendo 25 pontos. */
+    // sala por bimestre: 1º bimestre de 01/02 a 30/04 valendo 25 pontos
     @BeforeEach
     void montarSala() {
         usuario = new Usuario();

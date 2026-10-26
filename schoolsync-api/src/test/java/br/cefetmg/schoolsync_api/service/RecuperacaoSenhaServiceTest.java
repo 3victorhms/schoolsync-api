@@ -32,7 +32,6 @@ import br.cefetmg.schoolsync_api.entity.Usuario;
 import br.cefetmg.schoolsync_api.repository.CodigoRecuperacaoSenhaRepository;
 import br.cefetmg.schoolsync_api.repository.UsuarioRepository;
 
-// Feito com auxílio do Claude
 @ExtendWith(MockitoExtension.class)
 class RecuperacaoSenhaServiceTest {
 

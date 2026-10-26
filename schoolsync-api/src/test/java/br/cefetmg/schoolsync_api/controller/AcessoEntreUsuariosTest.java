@@ -23,13 +23,9 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-/**
- * Feito com auxílio do Claude: testes de controller (MockMvc) com a API inteira de pé
- * (segurança, filtro do JWT, controllers e banco H2 dos testes).
- *
- * Provam a correção do IDOR: o usuário vem do token, então ninguém lê nem altera a sala
- * ou as notas de outra pessoa trocando um id na URL.
- */
+// testes de controller (MockMvc) com a API inteira de pé (segurança, filtro do JWT, controllers e H2)
+// provam a correção do IDOR: o usuário vem do token, ent ninguém lê nem altera a sala ou as notas
+// de outra pessoa trocando o id na url
 @SpringBootTest
 @AutoConfigureMockMvc
 class AcessoEntreUsuariosTest {
@@ -78,7 +74,7 @@ class AcessoEntreUsuariosTest {
         return logar(email);
     }
 
-    /** Sala com 1 matéria e 2 semestres; o 1º semestre contém hoje. */
+    // sala com 1 matéria e 2 semestres; o 1º semestre contém hoje
     private JsonNode criarSala(String token) throws Exception {
         LocalDate hoje = LocalDate.now();
         Map<String, Object> corpo = Map.of(

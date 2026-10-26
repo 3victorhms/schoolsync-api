@@ -18,6 +18,9 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import br.cefetmg.schoolsync_api.service.ManutencaoService;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -27,6 +30,8 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final RespostasDeSeguranca respostasDeSeguranca;
+    private final ManutencaoService manutencaoService;
+    private final ObjectMapper objectMapper;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -39,9 +44,9 @@ public class SecurityConfig {
                         .accessDeniedHandler(respostasDeSeguranca))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/usuarios", "/usuarios/autenticar",
+                        .requestMatchers(HttpMethod.POST, "/usuarios", "/usuarios/autenticar", "/usuarios/google",
                                 "/usuarios/senha/esqueci", "/usuarios/senha/redefinir").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/usuarios/verificar-login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/usuarios/verificar-login", "/sistema/status").permitAll()
                         // o stream fica liberado aqui só pra n quebrar o envio assíncrono do SSE,
                         // mas sem token válido na url o controller responde 401 (pelo UsuarioAtual)
                         .requestMatchers(HttpMethod.GET, "/notificacoes/stream").permitAll()
@@ -53,10 +58,12 @@ public class SecurityConfig {
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                // depois do JWT, pra saber se quem chamou é admin
+                .addFilterAfter(new ManutencaoFilter(manutencaoService, objectMapper), UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
-    // Esse bean irá criptografar a senha do usuário em hash, o que vai garantir uma melhor segurança
+    // esse bean irá criptografar a senha do usuário em hash, o que vai garantir uma melhor segurança
     // Como não aprendi isso no curso técnico do CEFET, tirei as informações desses artigos:
     // https://docs.spring.io/spring-security/reference/features/authentication/password-storage.html
     // https://docs.spring.io/spring-security/site/docs/current/api/org/springframework/security/crypto/bcrypt/BCryptPasswordEncoder.html

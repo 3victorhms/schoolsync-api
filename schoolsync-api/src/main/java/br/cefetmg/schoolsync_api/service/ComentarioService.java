@@ -97,10 +97,8 @@ public class ComentarioService {
         }
     }
 
-    /**
-     * Feito com auxílio do Claude: os comentários principais mais recentes (cada um com as
-     * respostas). A página vem em ordem cronológica, igual antes; {@code antesDe} busca os anteriores.
-     */
+    // os comentários principais mais recentes (com as respostas), em ordem cronológica
+    // com antesDe busca os anteriores
     @Transactional(readOnly = true)
     public PaginaDTO<ComentarioResponseDTO> listarPaginaPorAtividade(String idAtividade, int tamanho, LocalDateTime antesDe) {
         if (!atividadeRepository.existsById(idAtividade)) {

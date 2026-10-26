@@ -54,7 +54,7 @@ class NotaServiceTest {
     private Materia matematica;
     private Periodo primeiroBimestre;
 
-    /** 1º bimestre do ano passado (datas já ocorridas), valendo 25 pontos por matéria. */
+    // 1º bimestre do ano passado (datas já ocorridas), valendo 25 pontos por matéria
     @BeforeEach
     void montarSala() {
         int anoPassado = LocalDate.now().getYear() - 1;
@@ -111,7 +111,7 @@ class NotaServiceTest {
 
     @Test
     void notaAvulsaEntraNoLimiteDoPeriodoJuntoComAsAtividadesDaSala() {
-        // A sala já distribuiu 20 dos 25 pontos: uma avulsa de 10 não cabe
+        // a sala já distribuiu 20 dos 25 pontos: uma avulsa de 10 não cabe
         when(atividadeRepository.findByMateria_IdAndPeriodo_Id("materia-1", "periodo-1"))
                 .thenReturn(List.of(atividadeDaSala(20d)));
         when(notaRepository.findByUsuario_IdAndMateria_IdAndPeriodo_IdAndAtividadeIsNull("aluno-1", "materia-1", "periodo-1"))

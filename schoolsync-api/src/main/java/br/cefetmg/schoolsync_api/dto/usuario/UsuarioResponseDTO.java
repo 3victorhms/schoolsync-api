@@ -19,6 +19,8 @@ public class UsuarioResponseDTO {
     private String foto;
     private boolean ativo;
     private Perfil perfil;
+    // a conta já entrou pelo google (o perfil usa pra explicar que dá pra criar uma senha pelo "esqueci minha senha")
+    private boolean contaGoogle;
 
     public UsuarioResponseDTO(Usuario usuario) {
         this.id = usuario.getId();
@@ -27,5 +29,6 @@ public class UsuarioResponseDTO {
         this.foto = usuario.getFoto();
         this.ativo = usuario.isAtivo();
         this.perfil = usuario.getPerfil();
+        this.contaGoogle = usuario.getGoogleId() != null;
     }
 }

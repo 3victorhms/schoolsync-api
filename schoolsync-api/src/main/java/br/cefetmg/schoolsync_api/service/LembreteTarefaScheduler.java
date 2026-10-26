@@ -11,7 +11,6 @@ import br.cefetmg.schoolsync_api.repository.NotificacaoRepository;
 import br.cefetmg.schoolsync_api.repository.TarefaRepository;
 import lombok.RequiredArgsConstructor;
 
-// feito com auxílio do Claude
 // todo dia de manhã avisa quem está com uma tarefa de grupo q vence amanhã (e ainda n concluiu)
 @Component
 @RequiredArgsConstructor

@@ -35,7 +35,7 @@ import br.cefetmg.schoolsync_api.repository.AtividadeRepository;
 import br.cefetmg.schoolsync_api.repository.TarefaRepository;
 import br.cefetmg.schoolsync_api.repository.UsuarioRepository;
 
-// feito com auxílio do Claude: prazo das tarefas e avisos ao grupo
+// prazo das tarefas e avisos ao grupo
 @ExtendWith(MockitoExtension.class)
 class TarefaServiceTest {
 

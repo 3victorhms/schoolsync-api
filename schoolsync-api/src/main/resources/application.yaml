@@ -35,9 +35,8 @@ firebase:
   project-id: ${FIREBASE_PROJECT_ID:}
   credentials-base64: ${FIREBASE_CREDENTIALS_BASE64:}
 
-# recuperação de senha (feito com auxílio do Claude). O e-mail sai pela API da Brevo
-# porque o plano gratuito do Render bloqueia SMTP. Sem BREVO_API_KEY e EMAIL_REMETENTE
-# a rota responde 503 e o resto da API funciona normalmente.
+# recuperação de senha. o e-mail sai pela API da brevo pq o render grátis bloqueia SMTP.
+# sem BREVO_API_KEY e EMAIL_REMETENTE a rota responde 503 e o resto funciona normal
 recuperacao-senha:
   brevo-api-key: ${BREVO_API_KEY:}
   remetente-email: ${EMAIL_REMETENTE:}
@@ -48,3 +47,8 @@ cloudinary:
   cloud-name: ${CLOUDINARY_CLOUD_NAME:}
   api-key: ${CLOUDINARY_API_KEY:}
   api-secret: ${CLOUDINARY_API_SECRET:}
+
+# login com google: client id "Aplicativo da Web" criado no Google Cloud (o mesmo do app).
+# dá pra colocar mais de um separado por vírgula. sem ele a rota /usuarios/google responde 503
+google:
+  client-ids: ${GOOGLE_CLIENT_IDS:}

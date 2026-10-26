@@ -22,7 +22,6 @@ import br.cefetmg.schoolsync_api.entity.Usuario;
 import br.cefetmg.schoolsync_api.repository.NotificacaoRepository;
 import br.cefetmg.schoolsync_api.repository.TarefaRepository;
 
-// feito com auxílio do Claude
 @ExtendWith(MockitoExtension.class)
 class LembreteTarefaSchedulerTest {
 

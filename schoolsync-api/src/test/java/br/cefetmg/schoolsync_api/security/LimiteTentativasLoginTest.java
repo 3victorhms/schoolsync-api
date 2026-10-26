@@ -16,10 +16,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.server.ResponseStatusException;
 
-// Feito com auxílio do Claude
 class LimiteTentativasLoginTest {
 
-    /** Relógio que o teste avança na mão. */
+    // relógio que o teste avança na mão
     private static final class RelogioFalso extends Clock {
         private Instant agora = Instant.parse("2026-10-26T12:00:00Z");
 
