@@ -13,10 +13,10 @@ import lombok.Setter;
 @AllArgsConstructor
 public class LoginDTO {
 
-    @NotBlank(message = "O email e obrigatorio")
-    @Email(message = "Email invalido")
+    @NotBlank(message = "O e-mail é obrigatório")
+    @Email(message = "E-mail inválido")
     private String email;
 
-    @NotBlank(message = "A senha e obrigatoria")
+    @NotBlank(message = "A senha é obrigatória")
     private String senha;
 }

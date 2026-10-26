@@ -14,8 +14,8 @@ import lombok.Setter;
 @AllArgsConstructor
 public class SolicitarRecuperacaoSenhaDTO {
 
-    @NotBlank(message = "O email é obrigatório")
-    @Email(message = "Email inválido")
-    @Size(max = 200, message = "O email deve ter no máximo 200 caracteres")
+    @NotBlank(message = "O e-mail é obrigatório")
+    @Email(message = "E-mail inválido")
+    @Size(max = 200, message = "O e-mail deve ter no máximo 200 caracteres")
     private String email;
 }

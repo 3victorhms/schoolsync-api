@@ -77,7 +77,7 @@ public class NotificacaoService {
     @Transactional
     public void marcarComoLida(String idNotificacao) {
         Notificacao notificacao = notificacaoRepository.findById(idNotificacao)
-                .orElseThrow(() -> new EntityNotFoundException("Notificacao nao encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Notificação não encontrada"));
 
         notificacao.setLido(true);
         notificacaoRepository.save(notificacao);
@@ -189,7 +189,7 @@ public class NotificacaoService {
         return configuracaoRepository.findByUsuario_Id(idUsuario)
                 .orElseGet(() -> {
                     Usuario usuario = usuarioRepository.findById(idUsuario)
-                            .orElseThrow(() -> new EntityNotFoundException("Usuario nao encontrado"));
+                            .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
 
                     NotificacaoConfiguracao configuracao = new NotificacaoConfiguracao();
                     configuracao.setUsuario(usuario);
@@ -203,7 +203,7 @@ public class NotificacaoService {
 
     private void validarUsuario(String idUsuario) {
         if (!usuarioRepository.existsById(idUsuario)) {
-            throw new EntityNotFoundException("Usuario nao encontrado");
+            throw new EntityNotFoundException("Usuário não encontrado");
         }
     }
 
@@ -234,7 +234,7 @@ public class NotificacaoService {
     @Transactional(readOnly = true)
     public void validarDono(String idNotificacao, String idUsuario) {
         Notificacao notificacao = notificacaoRepository.findById(idNotificacao)
-                .orElseThrow(() -> new EntityNotFoundException("Notificacao nao encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Notificação não encontrada"));
 
         if (!notificacao.getUsuario().getId().equals(idUsuario)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Esta notificação não é sua");

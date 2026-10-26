@@ -41,10 +41,10 @@ public class ComentarioService {
     @Transactional
     public ComentarioResponseDTO criar(String idAtividade, ComentarioRequestDTO dto, String idUsuario) {
         Atividade atividade = atividadeRepository.findById(idAtividade)
-                .orElseThrow(() -> new EntityNotFoundException("Atividade nao encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Atividade não encontrada"));
 
         Usuario usuario = usuarioRepository.findById(idUsuario)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario nao encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
 
         Comentario comentario = new Comentario();
         comentario.setTexto(dto.getTexto());
@@ -54,7 +54,7 @@ public class ComentarioService {
 
         if (dto.getIdComentarioPai() != null && !dto.getIdComentarioPai().isBlank()) {
             Comentario comentarioPai = comentarioRepository.findById(dto.getIdComentarioPai())
-                    .orElseThrow(() -> new EntityNotFoundException("Comentario pai nao encontrado"));
+                    .orElseThrow(() -> new EntityNotFoundException("Comentário pai não encontrado"));
 
             if (!comentarioPai.getAtividade().getId().equals(idAtividade)) {
                 throw new IllegalArgumentException("O comentário respondido não pertence a esta atividade");
@@ -77,7 +77,7 @@ public class ComentarioService {
             notificacaoService.criarParaUsuario(
                     idDonoAtividade,
                     "ATIVIDADE",
-                    "Novo comentario",
+                    "Novo comentário",
                     comentario.getUsuario().getNome() + " comentou na atividade " + comentario.getAtividade().getTitulo(),
                     comentario.getAtividade().getId()
             );
@@ -90,7 +90,7 @@ public class ComentarioService {
                         idAutorComentarioPai,
                         "ATIVIDADE",
                         "Nova resposta",
-                        comentario.getUsuario().getNome() + " respondeu seu comentario",
+                        comentario.getUsuario().getNome() + " respondeu seu comentário",
                         comentario.getAtividade().getId()
                 );
             }
@@ -104,7 +104,7 @@ public class ComentarioService {
     @Transactional(readOnly = true)
     public PaginaDTO<ComentarioResponseDTO> listarPaginaPorAtividade(String idAtividade, int tamanho, LocalDateTime antesDe) {
         if (!atividadeRepository.existsById(idAtividade)) {
-            throw new EntityNotFoundException("Atividade nao encontrada");
+            throw new EntityNotFoundException("Atividade não encontrada");
         }
 
         Pageable pagina = PageRequest.of(0, tamanho + 1, Sort.by(Sort.Direction.DESC, "dataCriacao"));
@@ -124,7 +124,7 @@ public class ComentarioService {
     @Transactional(readOnly = true)
     public List<ComentarioResponseDTO> listarPorAtividade(String idAtividade) {
         if (!atividadeRepository.existsById(idAtividade)) {
-            throw new EntityNotFoundException("Atividade nao encontrada");
+            throw new EntityNotFoundException("Atividade não encontrada");
         }
 
         return comentarioRepository
@@ -137,7 +137,7 @@ public class ComentarioService {
     @Transactional
     public ComentarioResponseDTO atualizar(String idComentario, ComentarioUpdateDTO dto, String idUsuario) {
         Comentario comentario = comentarioRepository.findById(idComentario)
-                .orElseThrow(() -> new EntityNotFoundException("Comentario nao encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Comentário não encontrado"));
 
         validarAutor(comentario, idUsuario);
 
@@ -149,7 +149,7 @@ public class ComentarioService {
     @Transactional
     public void excluir(String idComentario, String idUsuario) {
         Comentario comentario = comentarioRepository.findById(idComentario)
-                .orElseThrow(() -> new EntityNotFoundException("Comentario nao encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Comentário não encontrado"));
 
         validarAutor(comentario, idUsuario);
 

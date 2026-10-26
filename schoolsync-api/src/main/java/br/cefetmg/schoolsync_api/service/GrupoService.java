@@ -44,10 +44,10 @@ public class GrupoService {
     @Transactional
     public GrupoResponseDTO criar(GrupoRequestDTO dto, String idCriador) {
         Sala sala = salaRepository.findById(dto.getIdSala())
-                .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Sala não encontrada"));
 
         Usuario criador = usuarioRepository.findById(idCriador)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario nao encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
 
         validarMembroDaSala(sala.getId(), criador.getId());
 
@@ -73,10 +73,10 @@ public class GrupoService {
     public GrupoResponseDTO entrar(String codigoConvite, String idUsuario) {
         // os códigos são gerados em maiúsculas, ent aceita o código digitado em minúsculas tbm
         Grupo grupo = grupoRepository.findByCodigoConvite(codigoConvite.trim().toUpperCase(Locale.ROOT))
-                .orElseThrow(() -> new EntityNotFoundException("Grupo nao encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Grupo não encontrado"));
 
         Usuario usuario = usuarioRepository.findById(idUsuario)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario nao encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
 
         validarMembroDaSala(grupo.getSala().getId(), usuario.getId());
 
@@ -252,7 +252,7 @@ public class GrupoService {
 
     Grupo buscarGrupo(String idGrupo) {
         return grupoRepository.findById(idGrupo)
-                .orElseThrow(() -> new EntityNotFoundException("Grupo nao encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Grupo não encontrado"));
     }
 
     void validarCriadorDoGrupo(Grupo grupo, String idUsuario) {
