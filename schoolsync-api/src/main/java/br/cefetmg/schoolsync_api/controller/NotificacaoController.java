@@ -18,7 +18,8 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import br.cefetmg.schoolsync_api.dto.notificacao.NotificacaoConfiguracaoDTO;
 import br.cefetmg.schoolsync_api.dto.notificacao.DispositivoPushDTO;
-import br.cefetmg.schoolsync_api.dto.notificacao.NotificacaoResponseDTO;
+import br.cefetmg.schoolsync_api.dto.notificacao.NotificacoesPaginaDTO;
+import br.cefetmg.schoolsync_api.dto.pagina.Paginacao;
 import br.cefetmg.schoolsync_api.service.NotificacaoService;
 import br.cefetmg.schoolsync_api.service.NotificacaoPushService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -53,9 +54,14 @@ public class NotificacaoController {
         return ResponseEntity.noContent().build();
     }
 
+    // feito com auxílio do Claude: paginado por cursor. ?tamanho=20&antesDe=<horário da mais antiga que o app já tem>
     @GetMapping
-    public ResponseEntity<List<NotificacaoResponseDTO>> listarMinhas() {
-        return ResponseEntity.ok(notificacaoService.listarPorUsuario(usuarioAtual.id()));
+    public ResponseEntity<NotificacoesPaginaDTO> listarMinhas(
+            @RequestParam(required = false) Integer tamanho,
+            @RequestParam(required = false) String antesDe
+    ) {
+        return ResponseEntity.ok(notificacaoService.listarPagina(
+                usuarioAtual.id(), Paginacao.tamanho(tamanho), Paginacao.cursor(antesDe)));
     }
 
     @PutMapping("/{id}/lida")

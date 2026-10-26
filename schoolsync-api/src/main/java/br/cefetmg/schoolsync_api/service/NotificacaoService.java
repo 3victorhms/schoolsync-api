@@ -9,6 +9,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -17,6 +20,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import br.cefetmg.schoolsync_api.dto.notificacao.NotificacaoConfiguracaoDTO;
 import br.cefetmg.schoolsync_api.dto.notificacao.NotificacaoResponseDTO;
+import br.cefetmg.schoolsync_api.dto.notificacao.NotificacoesPaginaDTO;
 import br.cefetmg.schoolsync_api.entity.Notificacao;
 import br.cefetmg.schoolsync_api.entity.NotificacaoConfiguracao;
 import br.cefetmg.schoolsync_api.entity.Usuario;
@@ -37,6 +41,28 @@ public class NotificacaoService {
     private final UsuarioRepository usuarioRepository;
     private final NotificacaoPushService notificacaoPushService;
     private final Map<String, List<SseEmitter>> emittersPorUsuario = new ConcurrentHashMap<>();
+
+    /**
+     * Feito com auxílio do Claude: uma página das notificações do usuário, da mais nova para a
+     * mais antiga. Busca um item a mais só para saber se ainda existe outra página.
+     */
+    @Transactional(readOnly = true)
+    public NotificacoesPaginaDTO listarPagina(String idUsuario, int tamanho, LocalDateTime antesDe) {
+        validarUsuario(idUsuario);
+
+        Pageable pagina = PageRequest.of(0, tamanho + 1, Sort.by(Sort.Direction.DESC, "horario"));
+        List<Notificacao> encontradas = antesDe == null
+                ? notificacaoRepository.findByUsuario_Id(idUsuario, pagina)
+                : notificacaoRepository.findByUsuario_IdAndHorarioBefore(idUsuario, antesDe, pagina);
+
+        List<NotificacaoResponseDTO> itens = encontradas.stream()
+                .limit(tamanho)
+                .map(NotificacaoResponseDTO::new)
+                .collect(Collectors.toList());
+
+        return new NotificacoesPaginaDTO(itens, encontradas.size() > tamanho,
+                notificacaoRepository.countByUsuario_IdAndLidoFalse(idUsuario));
+    }
 
     @Transactional(readOnly = true)
     public List<NotificacaoResponseDTO> listarPorUsuario(String idUsuario) {

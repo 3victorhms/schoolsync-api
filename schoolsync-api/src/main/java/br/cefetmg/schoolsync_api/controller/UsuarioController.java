@@ -8,9 +8,11 @@ import br.cefetmg.schoolsync_api.dto.usuario.UsuarioPublicoDTO;
 import br.cefetmg.schoolsync_api.dto.usuario.ImagemUsuarioDTO;
 import br.cefetmg.schoolsync_api.dto.usuario.RedefinirSenhaDTO;
 import br.cefetmg.schoolsync_api.dto.usuario.SolicitarRecuperacaoSenhaDTO;
+import br.cefetmg.schoolsync_api.security.LimiteTentativasLogin;
 import br.cefetmg.schoolsync_api.security.UsuarioAtual;
 import br.cefetmg.schoolsync_api.service.RecuperacaoSenhaService;
 import br.cefetmg.schoolsync_api.service.UsuarioService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -34,6 +36,7 @@ public class UsuarioController {
     private final UsuarioService usuarioService;
     private final UsuarioAtual usuarioAtual;
     private final RecuperacaoSenhaService recuperacaoSenhaService;
+    private final LimiteTentativasLogin limiteTentativasLogin;
 
     @GetMapping("/{id}")
     @Operation(summary = "Buscar os dados públicos de um usuário (id, nome e foto)")
@@ -56,16 +59,23 @@ public class UsuarioController {
 
     @PostMapping("/autenticar")
     public ResponseEntity<LoginResponseDTO> autenticar(
-            @Valid @RequestBody LoginDTO loginDTO
+            @Valid @RequestBody LoginDTO loginDTO,
+            HttpServletRequest request
     ) {
+        // feito com auxílio do Claude: depois de muitas senhas erradas responde 429 (ver LimiteTentativasLogin)
+        String ip = limiteTentativasLogin.ipDoCliente(request);
+        limiteTentativasLogin.verificar(loginDTO.getEmail(), ip);
+
         Optional<LoginResponseDTO> login = usuarioService.autenticar(
                 loginDTO.getEmail(),
                 loginDTO.getSenha()
         );
 
         if (login.isPresent()) {
+            limiteTentativasLogin.registrarSucesso(loginDTO.getEmail());
             return ResponseEntity.ok(login.get());
         }
+        limiteTentativasLogin.registrarFalha(loginDTO.getEmail(), ip);
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 

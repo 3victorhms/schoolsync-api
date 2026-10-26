@@ -11,11 +11,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.cefetmg.schoolsync_api.dto.comentario.ComentarioRequestDTO;
 import br.cefetmg.schoolsync_api.dto.comentario.ComentarioResponseDTO;
 import br.cefetmg.schoolsync_api.dto.comentario.ComentarioUpdateDTO;
+import br.cefetmg.schoolsync_api.dto.pagina.PaginaDTO;
+import br.cefetmg.schoolsync_api.dto.pagina.Paginacao;
 import br.cefetmg.schoolsync_api.security.UsuarioAtual;
 import br.cefetmg.schoolsync_api.service.AtividadeService;
 import br.cefetmg.schoolsync_api.service.ComentarioService;
@@ -33,10 +36,16 @@ public class ComentarioController {
     private final AtividadeService atividadeService;
     private final UsuarioAtual usuarioAtual;
 
+    // feito com auxílio do Claude: paginado por cursor. ?tamanho=20&antesDe=<data do comentário mais antigo já carregado>
     @GetMapping("/atividades/{idAtividade}/comentarios")
-    public ResponseEntity<List<ComentarioResponseDTO>> listarPorAtividade(@PathVariable String idAtividade) {
+    public ResponseEntity<PaginaDTO<ComentarioResponseDTO>> listarPorAtividade(
+            @PathVariable String idAtividade,
+            @RequestParam(required = false) Integer tamanho,
+            @RequestParam(required = false) String antesDe
+    ) {
         atividadeService.validarAcessoAtividade(idAtividade, usuarioAtual.id());
-        return ResponseEntity.ok(comentarioService.listarPorAtividade(idAtividade));
+        return ResponseEntity.ok(comentarioService.listarPaginaPorAtividade(
+                idAtividade, Paginacao.tamanho(tamanho), Paginacao.cursor(antesDe)));
     }
 
     @PostMapping("/atividades/{idAtividade}/comentarios")

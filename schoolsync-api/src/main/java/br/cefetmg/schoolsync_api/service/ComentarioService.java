@@ -3,15 +3,21 @@ package br.cefetmg.schoolsync_api.service;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.cefetmg.schoolsync_api.dto.comentario.ComentarioRequestDTO;
 import br.cefetmg.schoolsync_api.dto.comentario.ComentarioResponseDTO;
 import br.cefetmg.schoolsync_api.dto.comentario.ComentarioUpdateDTO;
+import br.cefetmg.schoolsync_api.dto.pagina.PaginaDTO;
 import br.cefetmg.schoolsync_api.entity.Atividade;
 import br.cefetmg.schoolsync_api.entity.Comentario;
 import br.cefetmg.schoolsync_api.entity.Usuario;
@@ -89,6 +95,30 @@ public class ComentarioService {
                 );
             }
         }
+    }
+
+    /**
+     * Feito com auxílio do Claude: os comentários principais mais recentes (cada um com as
+     * respostas). A página vem em ordem cronológica, igual antes; {@code antesDe} busca os anteriores.
+     */
+    @Transactional(readOnly = true)
+    public PaginaDTO<ComentarioResponseDTO> listarPaginaPorAtividade(String idAtividade, int tamanho, LocalDateTime antesDe) {
+        if (!atividadeRepository.existsById(idAtividade)) {
+            throw new EntityNotFoundException("Atividade nao encontrada");
+        }
+
+        Pageable pagina = PageRequest.of(0, tamanho + 1, Sort.by(Sort.Direction.DESC, "dataCriacao"));
+        List<Comentario> encontrados = antesDe == null
+                ? comentarioRepository.findByAtividade_IdAndComentarioPaiIsNull(idAtividade, pagina)
+                : comentarioRepository.findByAtividade_IdAndComentarioPaiIsNullAndDataCriacaoBefore(idAtividade, antesDe, pagina);
+
+        List<ComentarioResponseDTO> itens = new ArrayList<>(encontrados.stream()
+                .limit(tamanho)
+                .map(ComentarioResponseDTO::new)
+                .collect(Collectors.toList()));
+        // buscou do mais novo para o mais antigo; a tela mostra do mais antigo para o mais novo
+        Collections.reverse(itens);
+        return new PaginaDTO<>(itens, encontrados.size() > tamanho);
     }
 
     @Transactional(readOnly = true)
