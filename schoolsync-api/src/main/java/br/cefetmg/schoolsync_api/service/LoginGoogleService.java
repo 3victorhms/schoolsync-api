@@ -1,6 +1,7 @@
 package br.cefetmg.schoolsync_api.service;
 
-import java.util.UUID;
+import java.security.SecureRandom;
+import java.util.Base64;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 public class LoginGoogleService {
 
     private static final int TAMANHO_MAXIMO_NOME = 150;
+    private static final SecureRandom ALEATORIO = new SecureRandom();
 
     private final GoogleTokenVerifier verificador;
     private final UsuarioRepository usuarioRepository;
@@ -60,8 +62,15 @@ public class LoginGoogleService {
         usuario.setFoto(conta.foto());
         // quem entra pelo google n tem senha. fica um hash aleatório que ninguém sabe;
         // se a pessoa quiser entrar com senha também, usa o "esqueci minha senha" pra criar uma
-        usuario.setSenha(passwordEncoder.encode(UUID.randomUUID() + "-" + UUID.randomUUID()));
+        usuario.setSenha(passwordEncoder.encode(senhaAleatoria()));
         return usuario;
+    }
+
+    // 32 bytes aleatórios = 43 caracteres. o bcrypt n aceita senha com mais de 72 bytes
+    private static String senhaAleatoria() {
+        byte[] bytes = new byte[32];
+        ALEATORIO.nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 
     private static String nome(ContaGoogle conta) {
