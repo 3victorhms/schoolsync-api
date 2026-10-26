@@ -18,18 +18,12 @@ import br.cefetmg.schoolsync_api.entity.Usuario;
 import br.cefetmg.schoolsync_api.repository.CodigoRecuperacaoSenhaRepository;
 import br.cefetmg.schoolsync_api.repository.UsuarioRepository;
 
-/**
- * Feito com auxílio do Claude: recuperação de senha por código enviado no e-mail.
- *
- * Regras:
- * - a resposta de "esqueci a senha" é a mesma se o e-mail existe ou não, para n revelar
- *   quem tem conta;
- * - o código tem 6 dígitos, vale {@code recuperacao-senha.validade-minutos} (15 por padrão)
- *   e só o hash fica no banco;
- * - pedir de novo antes de 60 s n gera outro e-mail (evita spam na caixa de alguém);
- * - 5 tentativas erradas descartam o código;
- * - ao redefinir, as sessões abertas caem (credenciaisAlteradasEm, igual à troca de senha no perfil).
- */
+// recuperação de senha por código no e-mail:
+// a resposta do "esqueci a senha" é igual se o e-mail existe ou n, pra n revelar quem tem conta
+// o código tem 6 dígitos, vale recuperacao-senha.validade-minutos (15 por padrão) e só o hash fica no banco
+// pedir de novo antes de 60 s n manda outro e-mail (evita spam)
+// 5 tentativas erradas descartam o código
+// ao redefinir, as sessões abertas caem (credenciaisAlteradasEm, igual trocar a senha no perfil)
 @Service
 public class RecuperacaoSenhaService {
 

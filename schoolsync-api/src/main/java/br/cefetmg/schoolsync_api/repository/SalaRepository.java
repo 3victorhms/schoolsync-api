@@ -16,7 +16,6 @@ public interface SalaRepository extends JpaRepository<Sala, String> {
 
     // trava a linha da sala no banco (select ... for update) até a transação terminar
     // sem isso, se dois alunos entrarem ao mesmo tempo numa sala com 49, os dois passam e ela fica com 51
-    // (comentário feito com auxílio do Claude)
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select sala from Sala sala where sala.codigoConvite = :codigoConvite")
     Optional<Sala> findByCodigoConviteForUpdate(@Param("codigoConvite") String codigoConvite);
@@ -29,7 +28,6 @@ public interface SalaRepository extends JpaRepository<Sala, String> {
 
     // mesma ideia do de cima, mas pelo id. é usado ao criar/editar atividade e ao editar a sala,
     // pra duas requisições ao mesmo tempo n furarem o limite de pontos do período
-    // (comentário feito com auxílio do Claude)
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select sala from Sala sala where sala.id = :id")
     Optional<Sala> findByIdForUpdate(@Param("id") String id);

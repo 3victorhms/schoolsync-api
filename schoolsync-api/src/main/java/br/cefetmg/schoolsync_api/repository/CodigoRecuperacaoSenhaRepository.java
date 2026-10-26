@@ -11,7 +11,7 @@ import br.cefetmg.schoolsync_api.entity.Usuario;
 @Repository
 public interface CodigoRecuperacaoSenhaRepository extends JpaRepository<CodigoRecuperacaoSenha, String> {
 
-    /** O código mais recente do usuário (os anteriores são apagados ao gerar um novo). */
+    // o código mais recente do usuário (os anteriores são apagados ao gerar um novo)
     Optional<CodigoRecuperacaoSenha> findFirstByUsuarioOrderByCriadoEmDesc(Usuario usuario);
 
     void deleteByUsuario(Usuario usuario);

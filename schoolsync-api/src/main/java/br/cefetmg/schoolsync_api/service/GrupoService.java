@@ -208,7 +208,7 @@ public class GrupoService {
         removerDoGrupo(grupo, idUsuarioRemover);
     }
 
-    // quando alguém sai ou é removido da sala, sai tbm de todos os grupos dela.
+    // quando alguém sai ou é removido da sala, sai tbm de todos os grupos dela
     // se era líder de algum grupo, o membro mais antigo vira o líder. se o grupo ficar vazio ele é excluído
     @Transactional
     public void removerUsuarioDosGruposDaSala(String idSala, String idUsuario) {

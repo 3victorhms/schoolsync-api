@@ -50,4 +50,8 @@ public class Usuario {
     // deixam de valer, ent quem trocou a senha derruba as sessões abertas em outros aparelhos
     @Column(name = "credenciais_alteradas_em")
     private LocalDateTime credenciaisAlteradasEm;
+
+    // id da conta google ligada (o "sub" do token). null = nunca entrou pelo google
+    @Column(name = "google_id", length = 64, unique = true)
+    private String googleId;
 }

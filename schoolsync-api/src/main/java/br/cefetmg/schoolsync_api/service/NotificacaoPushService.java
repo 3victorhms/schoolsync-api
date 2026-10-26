@@ -89,12 +89,11 @@ public class NotificacaoPushService {
         }
     }
 
-    // método feito com auxílio do Claude Code e configurado na API Firebase do
-    // Google
+    // envia a notificação push pelo firebase
     private int enviarAgora(String idUsuario, String tipo, String titulo, String mensagem, String targetId,
             boolean exigido) throws FirebaseMessagingException {
         // pega o cliente do Firebase configurado pelo servidor. é opcional,
-        // ent o método pode só ignorar o envio em ambientes sem configuração.
+        // ent o método pode só ignorar o envio em ambientes sem configuração
         FirebaseMessaging firebaseMessaging = firebaseMessagingProvider.getIfAvailable();
         if (firebaseMessaging == null) {
             if (exigido) {
@@ -107,11 +106,11 @@ public class NotificacaoPushService {
         }
 
         // busca todos os aparelhos associados ao usuário, pq uma mesma conta pode
-        // estar conectada em mais de um dispositivo.
+        // estar conectada em mais de um dispositivo
         List<DispositivoPush> dispositivos = dispositivoRepository.findAllByUsuario_Id(idUsuario);
         if (dispositivos.isEmpty()) {
             if (exigido) {
-                // O envio só pd acontecer se tiver dispositivo válido registrado
+                // o envio só pd acontecer se tiver dispositivo válido registrado
                 // tem um método q registra dispositivo novo e é chamado quando faz login
                 // ou quando o app recebe um novo token do firebase
                 throw new ResponseStatusException(HttpStatus.CONFLICT,
@@ -121,18 +120,18 @@ public class NotificacaoPushService {
         }
 
         // monta a mensagem do Firebase para cada token de dispositivo
-        // encontrado.
+        // encontrado
         List<Message> mensagens = dispositivos.stream()
                 .map(dispositivo -> montarMensagem(dispositivo.getToken(), tipo, titulo, mensagem, targetId))
                 .toList();
 
         // envia todas as mensagens pelo firebase e recebe o resultado individual de
-        // cada tentativa.
+        // cada tentativa
         BatchResponse resposta = firebaseMessaging.sendEach(mensagens);
 
         removerTokensInvalidos(dispositivos, resposta.getResponses());
 
-        // mostra quantos dispositivos confirmaram o recebimento pelo Firebase.
+        // mostra quantos dispositivos confirmaram o recebimento pelo Firebase
         return resposta.getSuccessCount();
     }
 

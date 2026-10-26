@@ -1,6 +1,7 @@
 package br.cefetmg.schoolsync_api.controller;
 
 import br.cefetmg.schoolsync_api.dto.usuario.LoginDTO;
+import br.cefetmg.schoolsync_api.dto.usuario.LoginGoogleDTO;
 import br.cefetmg.schoolsync_api.dto.usuario.LoginResponseDTO;
 import br.cefetmg.schoolsync_api.dto.usuario.UsuarioRequestDTO;
 import br.cefetmg.schoolsync_api.dto.usuario.UsuarioResponseDTO;
@@ -10,6 +11,7 @@ import br.cefetmg.schoolsync_api.dto.usuario.RedefinirSenhaDTO;
 import br.cefetmg.schoolsync_api.dto.usuario.SolicitarRecuperacaoSenhaDTO;
 import br.cefetmg.schoolsync_api.security.LimiteTentativasLogin;
 import br.cefetmg.schoolsync_api.security.UsuarioAtual;
+import br.cefetmg.schoolsync_api.service.LoginGoogleService;
 import br.cefetmg.schoolsync_api.service.RecuperacaoSenhaService;
 import br.cefetmg.schoolsync_api.service.UsuarioService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,6 +39,7 @@ public class UsuarioController {
     private final UsuarioAtual usuarioAtual;
     private final RecuperacaoSenhaService recuperacaoSenhaService;
     private final LimiteTentativasLogin limiteTentativasLogin;
+    private final LoginGoogleService loginGoogleService;
 
     @GetMapping("/{id}")
     @Operation(summary = "Buscar os dados públicos de um usuário (id, nome e foto)")
@@ -62,7 +65,7 @@ public class UsuarioController {
             @Valid @RequestBody LoginDTO loginDTO,
             HttpServletRequest request
     ) {
-        // feito com auxílio do Claude: depois de muitas senhas erradas responde 429 (ver LimiteTentativasLogin)
+        // depois de muitas senhas erradas responde 429 (LimiteTentativasLogin)
         String ip = limiteTentativasLogin.ipDoCliente(request);
         limiteTentativasLogin.verificar(loginDTO.getEmail(), ip);
 
@@ -79,8 +82,14 @@ public class UsuarioController {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
-    // feito com auxílio do Claude: recuperação de senha por código no e-mail.
-    // responde 204 mesmo se o e-mail n tiver conta, pra n revelar quem está cadastrado
+    @PostMapping("/google")
+    @Operation(summary = "Entrar com o Google (cria a conta se o e-mail ainda n tiver uma)")
+    public ResponseEntity<LoginResponseDTO> entrarComGoogle(@Valid @RequestBody LoginGoogleDTO dto) {
+        return ResponseEntity.ok(loginGoogleService.entrar(dto.getIdToken()));
+    }
+
+    // recuperação de senha por código no e-mail. responde 204 mesmo se o e-mail n tiver conta,
+    // pra n revelar quem tá cadastrado
     @PostMapping("/senha/esqueci")
     @Operation(summary = "Enviar por e-mail um código para redefinir a senha")
     public ResponseEntity<Void> esqueciSenha(@Valid @RequestBody SolicitarRecuperacaoSenhaDTO dto) {

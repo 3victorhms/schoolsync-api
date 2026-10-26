@@ -1,10 +1,10 @@
-// Popula a API do SchoolSync com dados de demonstração, passando pelas rotas da própria API
-// (ou seja, todas as regras de negócio valem: limites de pontos, períodos, permissões...).
+// popula a API do SchoolSync com dados de demonstração, passando pelas rotas da própria API
+// (ou seja, todas as regras de negócio valem: limites de pontos, períodos, permissões...)
 //
-// Uso (Node 18 ou mais novo, sem instalar nada):
+// uso (Node 18 ou mais novo, sem instalar nada):
 //   node scripts/popular-dados-demo.mjs --senha SENHA_DO_LIDER
 //
-// Opções:
+// opções:
 //   --api URL              endereço da API (padrão: a do Render, ou a variável API_URL)
 //   --email EMAIL          e-mail do líder da sala (padrão: victorhugomendesoares@gmail.com)
 //   --nome NOME            nome do líder (padrão: Victor Hugo)
@@ -12,8 +12,8 @@
 //   --senha-colegas SENHA  senha das contas dos colegas (padrão: schoolsync123)
 //   --sala NOME            nome da sala (padrão: DS3)
 //
-// A senha do líder n fica no código de propósito, pra n ir parar no GitHub.
-// Se o líder já tiver uma sala com esse nome, o script para sem duplicar nada.
+// a senha do líder n fica no código de propósito, pra n ir parar no GitHub
+// se o líder já tiver uma sala com esse nome, o script para sem duplicar nada
 
 const args = Object.fromEntries(
   process.argv.slice(2).reduce((pares, arg, i, todos) => {

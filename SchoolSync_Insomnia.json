@@ -1,7 +1,7 @@
 {
   "_type": "export",
   "__export_format": 4,
-  "__export_date": "2026-10-04T13:50:00Z",
+  "__export_date": "2026-10-26T04:10:00Z",
   "__export_source": "insomnia.desktop.app:v10.0.0",
   "resources": [
     {
@@ -231,6 +231,138 @@
       "modified": 1
     },
     {
+      "_id": "req_ss_04a",
+      "_type": "request",
+      "parentId": "fld_ss_1",
+      "name": "Pedir código para redefinir a senha",
+      "description": "Envia por e-mail um código de 6 dígitos (vale 15 minutos). Responde 204 mesmo se o e-mail não tiver conta, para não revelar quem está cadastrado. Sem BREVO_API_KEY e EMAIL_REMETENTE configurados no servidor, responde 503.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/usuarios/senha/esqueci",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"{{ _.email_usuario }}\"\n}"
+      },
+      "authentication": {
+        "type": "none"
+      },
+      "metaSortKey": -994.7,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 204 ou 503', () => {\n  insomnia.expect([204, 503]).to.include(insomnia.response.code);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_04b",
+      "_type": "request",
+      "parentId": "fld_ss_1",
+      "name": "Redefinir a senha com código errado",
+      "description": "Troque o código pelo que chegou no e-mail para redefinir de verdade (e depois use a senha nova no login). Com código errado a API responde 400; depois de 5 erros o código é descartado.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/usuarios/senha/redefinir",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"{{ _.email_usuario }}\",\n  \"codigo\": \"000000\",\n  \"novaSenha\": \"{{ _.senha_usuario }}\"\n}"
+      },
+      "authentication": {
+        "type": "none"
+      },
+      "metaSortKey": -994.4,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 400', () => {\n  insomnia.expect(insomnia.response.code).to.equal(400);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_04c",
+      "_type": "request",
+      "parentId": "fld_ss_1",
+      "name": "Status do sistema",
+      "description": "Rota pública que o app usa pra saber se o modo manutenção está ligado. Nunca mostra quem ligou.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/sistema/status",
+      "parameters": [],
+      "headers": [],
+      "body": {},
+      "authentication": {
+        "type": "none"
+      },
+      "metaSortKey": -994.2,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 200', () => {\n  insomnia.expect(insomnia.response.code).to.equal(200);\n});\ninsomnia.test('Tem o campo ativa', () => {\n  insomnia.expect(insomnia.response.json()).to.have.property('ativa');\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_04d",
+      "_type": "request",
+      "parentId": "fld_ss_1",
+      "name": "Login com Google (token inválido)",
+      "description": "O app manda o idToken que o Google devolve. Um token falso é recusado com 401. Se o servidor estiver sem GOOGLE_CLIENT_IDS, responde 503.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/usuarios/google",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"idToken\": \"token-invalido\"\n}"
+      },
+      "authentication": {
+        "type": "none"
+      },
+      "metaSortKey": -994.1,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 401 ou 503', () => {\n  insomnia.expect([401, 503]).to.include(insomnia.response.code);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
       "_id": "fld_ss_2",
       "_type": "request_group",
       "parentId": "wrk_schoolsync_v2",
@@ -344,6 +476,41 @@
       "settingFollowRedirects": "global",
       "preRequestScript": "",
       "afterResponseScript": "insomnia.test('Status 401', () => {\n  insomnia.expect(insomnia.response.code).to.equal(401);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_07a",
+      "_type": "request",
+      "parentId": "fld_ss_2",
+      "name": "Login bloqueado por excesso de tentativas",
+      "description": "Envie esta requisição 6 vezes seguidas: da 6ª em diante a API responde 429 (5 senhas erradas por e-mail, ou 20 por IP, em 15 minutos bloqueiam o login por 15 minutos). Usa um e-mail de teste para não bloquear as contas da demonstração.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/usuarios/autenticar",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"bloqueio.demo@schoolsync.com\",\n  \"senha\": \"senhaErrada999\"\n}"
+      },
+      "authentication": {
+        "type": "none"
+      },
+      "metaSortKey": -990.5,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 401 ou 429', () => {\n  insomnia.expect([401, 429]).to.include(insomnia.response.code);\n});",
       "created": 1,
       "modified": 1
     },
@@ -667,6 +834,150 @@
       "settingFollowRedirects": "global",
       "preRequestScript": "",
       "afterResponseScript": "insomnia.test('Status 400', () => {\n  insomnia.expect(insomnia.response.code).to.equal(400);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_12e",
+      "_type": "request",
+      "parentId": "fld_ss_4",
+      "name": "Usuário comum tenta ligar a manutenção (sem permissão)",
+      "description": "/admin/manutencao fica em /admin/**: o usuário comum recebe 403.",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/admin/manutencao",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"ativa\": true\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_usuario }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -983.15,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 403', () => {\n  insomnia.expect(insomnia.response.code).to.equal(403);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_12f",
+      "_type": "request",
+      "parentId": "fld_ss_4",
+      "name": "Admin liga o modo manutenção",
+      "description": "Quem não é ADMIN passa a receber 503 em todas as rotas (menos login, status e Swagger) até o admin desligar.",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/admin/manutencao",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"ativa\": true,\n  \"mensagem\": \"Estamos fazendo uma manutenção no SchoolSync. Volte daqui a pouco.\",\n  \"previsao\": \"hoje às 22h\"\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_admin }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -983.1,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 200', () => {\n  insomnia.expect(insomnia.response.code).to.equal(200);\n});\ninsomnia.test('Ligado', () => {\n  insomnia.expect(insomnia.response.json().ativa).to.equal(true);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_12g",
+      "_type": "request",
+      "parentId": "fld_ss_4",
+      "name": "Usuário comum durante a manutenção",
+      "description": "Com a manutenção ligada, o usuário comum recebe 503 com manutencao: true, e o app abre a tela de manutenção.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/salas",
+      "parameters": [],
+      "headers": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_usuario }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -983.07,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 503', () => {\n  insomnia.expect(insomnia.response.code).to.equal(503);\n});\ninsomnia.test('Resposta de manutenção', () => {\n  insomnia.expect(insomnia.response.json().manutencao).to.equal(true);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_12h",
+      "_type": "request",
+      "parentId": "fld_ss_4",
+      "name": "Admin desliga o modo manutenção",
+      "description": "Desliga a manutenção pra continuar a demonstração. O filtro guarda o estado por até 20 segundos, então o usuário comum pode demorar um pouco pra voltar.",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/admin/manutencao",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"ativa\": false\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_admin }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -983.04,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 200', () => {\n  insomnia.expect(insomnia.response.code).to.equal(200);\n});\ninsomnia.test('Desligado', () => {\n  insomnia.expect(insomnia.response.json().ativa).to.equal(false);\n});",
       "created": 1,
       "modified": 1
     },
@@ -1310,9 +1621,9 @@
       "_type": "request",
       "parentId": "fld_ss_6",
       "name": "Ver minhas notificações (admin)",
-      "description": "O admin é membro da sala e foi notificado da atividade criada pelo usuário comum.",
+      "description": "O admin é membro da sala e foi notificado da atividade criada pelo usuário comum. A resposta é paginada: { itens, temMais, naoLidas }, com 20 por página.",
       "method": "GET",
-      "url": "{{ _.base_url }}/notificacoes",
+      "url": "{{ _.base_url }}/notificacoes?tamanho=20",
       "parameters": [],
       "headers": [],
       "body": {},
@@ -1323,6 +1634,36 @@
         "disabled": false
       },
       "metaSortKey": -964,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('Status 200', () => {\n  insomnia.expect(insomnia.response.code).to.equal(200);\n});",
+      "created": 1,
+      "modified": 1
+    },
+    {
+      "_id": "req_ss_30a",
+      "_type": "request",
+      "parentId": "fld_ss_6",
+      "name": "Ver os comentários da atividade (paginado)",
+      "description": "Resposta { itens, temMais }, com os itens em ordem cronológica. Para buscar os anteriores, mande em antesDe a dataCriacao do comentário mais antigo (ex.: antesDe=2026-10-20T10:00:00).",
+      "method": "GET",
+      "url": "{{ _.base_url }}/atividades/{{ _.atividade_id }}/comentarios?tamanho=20",
+      "parameters": [],
+      "headers": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_usuario }}",
+        "prefix": "",
+        "disabled": false
+      },
+      "metaSortKey": -963.5,
       "isPrivate": false,
       "settingStoreCookies": true,
       "settingSendCookies": true,

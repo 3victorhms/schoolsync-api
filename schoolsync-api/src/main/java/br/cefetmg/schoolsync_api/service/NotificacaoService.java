@@ -42,10 +42,8 @@ public class NotificacaoService {
     private final NotificacaoPushService notificacaoPushService;
     private final Map<String, List<SseEmitter>> emittersPorUsuario = new ConcurrentHashMap<>();
 
-    /**
-     * Feito com auxílio do Claude: uma página das notificações do usuário, da mais nova para a
-     * mais antiga. Busca um item a mais só para saber se ainda existe outra página.
-     */
+    // uma página das notificações do usuário, da mais nova pra mais antiga. busca um item a mais
+    // só pra saber se ainda tem outra página
     @Transactional(readOnly = true)
     public NotificacoesPaginaDTO listarPagina(String idUsuario, int tamanho, LocalDateTime antesDe) {
         validarUsuario(idUsuario);

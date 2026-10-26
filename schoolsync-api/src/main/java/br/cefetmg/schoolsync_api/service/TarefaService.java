@@ -141,7 +141,7 @@ public class TarefaService {
         }
     }
 
-    // quando alguém conclui a parte dele, o resto do grupo fica sabendo.
+    // quando alguém conclui a parte dele, o resto do grupo fica sabendo
     // se essa era a última q faltava, todo mundo (inclusive quem concluiu) recebe o aviso de grupo concluído
     private void avisarGrupoDaConclusao(Tarefa tarefa, String idUsuarioLogado) {
         Grupo grupo = tarefa.getGrupo();

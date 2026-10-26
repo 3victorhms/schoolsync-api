@@ -36,7 +36,7 @@ public class ComentarioController {
     private final AtividadeService atividadeService;
     private final UsuarioAtual usuarioAtual;
 
-    // feito com auxílio do Claude: paginado por cursor. ?tamanho=20&antesDe=<data do comentário mais antigo já carregado>
+    // paginado por cursor: ?tamanho=20&antesDe=<data do comentário mais antigo que o app já tem>
     @GetMapping("/atividades/{idAtividade}/comentarios")
     public ResponseEntity<PaginaDTO<ComentarioResponseDTO>> listarPorAtividade(
             @PathVariable String idAtividade,

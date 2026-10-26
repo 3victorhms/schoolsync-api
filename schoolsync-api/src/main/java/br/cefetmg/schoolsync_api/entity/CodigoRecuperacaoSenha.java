@@ -18,10 +18,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Feito com auxílio do Claude: código de 6 dígitos enviado por e-mail para redefinir a senha.
- * Só o hash (BCrypt) fica no banco, igual à senha: quem ler a tabela n consegue usar o código.
- */
+// código de 6 dígitos mandado por e-mail pra redefinir a senha. só o hash (BCrypt) fica no banco,
+// igual a senha, ent quem ler a tabela n consegue usar o código
 @Entity
 @Table(name = "tb_codigo_recuperacao_senha")
 @Getter
@@ -47,7 +45,7 @@ public class CodigoRecuperacaoSenha {
     @Column(name = "expira_em", nullable = false)
     private LocalDateTime expiraEm;
 
-    /** Tentativas erradas. Passou do limite, o código é descartado. */
+    // tentativas erradas. passou do limite, o código é descartado
     @Column(nullable = false)
     private int tentativas = 0;
 }

@@ -14,17 +14,11 @@ import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-/**
- * Feito com auxílio do Claude: limite de tentativas de login, contra força bruta.
- *
- * - 5 senhas erradas para o mesmo e-mail em 15 minutos bloqueiam esse e-mail por 15 minutos;
- * - 20 senhas erradas vindas do mesmo IP em 15 minutos bloqueiam esse IP por 15 minutos
- *   (pega quem testa muitos e-mails diferentes).
- * Um login certo zera o contador do e-mail.
- *
- * Fica em memória (sem biblioteca nova): reiniciar a API zera os contadores, o que serve
- * para uma instância só, como a do Render.
- */
+// limite de tentativas de login, contra força bruta:
+// 5 senhas erradas pro mesmo e-mail em 15 min bloqueiam o e-mail por 15 min
+// 20 senhas erradas do mesmo IP em 15 min bloqueiam o IP por 15 min (pega quem testa vários e-mails)
+// um login certo zera o contador do e-mail. fica em memória, ent reiniciar a API zera tudo,
+// o que serve pra uma instância só como a do render
 @Component
 public class LimiteTentativasLogin {
 
@@ -42,12 +36,12 @@ public class LimiteTentativasLogin {
         this(Clock.systemUTC());
     }
 
-    /** Construtor para os testes controlarem o tempo. */
+    // construtor para os testes controlarem o tempo
     LimiteTentativasLogin(Clock relogio) {
         this.relogio = relogio;
     }
 
-    /** Lança 429 se o e-mail ou o IP estiverem bloqueados. Chamar antes de conferir a senha. */
+    // lança 429 se o e-mail ou o IP estiverem bloqueados. chamar antes de conferir a senha
     public void verificar(String email, String ip) {
         Instant agora = relogio.instant();
         Instant bloqueadoAte = maisTarde(bloqueio(chaveEmail(email), agora), bloqueio(chaveIp(ip), agora));
@@ -69,11 +63,8 @@ public class LimiteTentativasLogin {
         contadores.remove(chaveEmail(email));
     }
 
-    /**
-     * IP de quem fez o pedido. No Render a API fica atrás de um proxy, que coloca o IP real
-     * no fim do X-Forwarded-For. Os valores do começo podem ter sido inventados pelo cliente,
-     * então usamos o último.
-     */
+    // IP de quem fez o pedido. no render a API fica atrás de um proxy que coloca o IP real no fim
+    // do X-Forwarded-For. os do começo podem ter sido inventados pelo cliente, ent usa o último
     public String ipDoCliente(HttpServletRequest request) {
         String encaminhado = request.getHeader("X-Forwarded-For");
         if (encaminhado != null && !encaminhado.isBlank()) {
@@ -131,7 +122,7 @@ public class LimiteTentativasLogin {
             this.inicio = inicio;
         }
 
-        /** A janela de contagem passou e não há bloqueio em andamento. */
+        // a janela de contagem passou e não há bloqueio em andamento
         private boolean expirou(Instant agora) {
             boolean janelaPassou = !inicio.plus(JANELA).isAfter(agora);
             boolean semBloqueio = bloqueadoAte == null || !bloqueadoAte.isAfter(agora);

@@ -14,10 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import br.cefetmg.schoolsync_api.config.RecuperacaoSenhaProperties;
 
-/**
- * Feito com auxílio do Claude: envio de e-mail transacional pela API da Brevo
- * (POST https://api.brevo.com/v3/smtp/email, autenticado pelo cabeçalho "api-key").
- */
+// envio de e-mail pela API da brevo (POST https://api.brevo.com/v3/smtp/email, cabeçalho api-key)
 @Service
 public class EmailService {
 

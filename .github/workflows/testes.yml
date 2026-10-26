@@ -1,6 +1,5 @@
-# Feito com auxílio do Claude: roda os testes da API a cada push e pull request.
-# Os testes usam o banco H2 em memória (src/test/resources/application.yaml),
-# então não precisam do Neon nem de nenhum segredo.
+# roda os testes da API a cada push e pull request
+# os testes usam o H2 em memória (src/test/resources/application.yaml), ent n precisam do neon nem de segredo
 name: Testes da API
 
 on:
