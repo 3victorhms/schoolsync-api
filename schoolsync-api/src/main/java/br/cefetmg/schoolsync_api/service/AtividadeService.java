@@ -52,10 +52,10 @@ public class AtividadeService {
     @Transactional
     public AtividadeResponseDTO criar(AtividadeRequestDTO dto, String idCriador) {
         Sala sala = salaRepository.findByIdForUpdate(dto.getIdSala())
-                .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Sala não encontrada"));
 
         Usuario criador = usuarioRepository.findById(idCriador)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario nao encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
 
         Materia materia = buscarMateriaDaSala(sala, dto.getIdMateria());
         Periodo periodo = buscarPeriodoDaData(sala, dto.getDataEntrega());
@@ -106,10 +106,10 @@ public class AtividadeService {
     @Transactional
     public AtividadeResponseDTO atualizar(String id, AtividadeRequestDTO dto, String idEditor) {
         Atividade atividade = atividadeRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Atividade nao encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Atividade não encontrada"));
 
         Sala sala = salaRepository.findByIdForUpdate(atividade.getSala().getId())
-                .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Sala não encontrada"));
         Materia materia = buscarMateriaDaSala(sala, dto.getIdMateria());
         Periodo periodo = buscarPeriodoDaData(sala, dto.getDataEntrega());
         validarPontuacao(materia, periodo, dto.getValor(), id);
@@ -189,7 +189,7 @@ public class AtividadeService {
 
     public AtividadeResponseDTO buscarPorId(String idAtividade, String idUsuarioLogado) {
         Atividade atividade = atividadeRepository.findById(idAtividade)
-                .orElseThrow(() -> new EntityNotFoundException("Atividade nao encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Atividade não encontrada"));
 
         String status = cadernoRepository
                 .findByAtividade_IdAndUsuario_Id(idAtividade, idUsuarioLogado)
@@ -216,7 +216,7 @@ public class AtividadeService {
     @Transactional
     public void excluir(String id) {
         Atividade atividade = atividadeRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Atividade nao encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Atividade não encontrada"));
 
         notificacaoService.removerPorAlvo(id);
         notaService.desvincularDaAtividade(atividade);
@@ -236,7 +236,7 @@ public class AtividadeService {
     @Transactional
     public void excluirAtividadesDaSala(String idSala) {
         Sala sala = salaRepository.findById(idSala)
-                .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Sala não encontrada"));
 
         List<Atividade> atividades = new ArrayList<>(sala.getAtividades());
         atividades.forEach(atividade -> {
@@ -255,10 +255,10 @@ public class AtividadeService {
         }
 
         Atividade atividade = atividadeRepository.findById(idAtividade)
-                .orElseThrow(() -> new EntityNotFoundException("Atividade nao encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Atividade não encontrada"));
 
         Usuario usuario = usuarioRepository.findById(idUsuario)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario nao encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
 
         Caderno caderno = new Caderno();
         caderno.setAtividade(atividade);
@@ -285,7 +285,7 @@ public class AtividadeService {
 
         Caderno caderno = cadernoRepository
                 .findByAtividade_IdAndUsuario_Id(idAtividade, idUsuario)
-                .orElseThrow(() -> new EntityNotFoundException("Atividade nao encontrada no caderno"));
+                .orElseThrow(() -> new EntityNotFoundException("Atividade não encontrada no caderno"));
 
         caderno.setStatus(status);
         cadernoRepository.save(caderno);
@@ -294,7 +294,7 @@ public class AtividadeService {
     @Transactional(readOnly = true)
     public void validarPodeGerenciar(String idAtividade, String idUsuario) {
         Atividade atividade = atividadeRepository.findById(idAtividade)
-                .orElseThrow(() -> new EntityNotFoundException("Atividade nao encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Atividade não encontrada"));
 
         // quem criou mas saiu ou foi removido da sala n pode mais mexer na atividade
         validarMembroDaSala(atividade.getSala().getId(), idUsuario);
@@ -310,7 +310,7 @@ public class AtividadeService {
     @Transactional(readOnly = true)
     public void validarAcessoAtividade(String idAtividade, String idUsuario) {
         Atividade atividade = atividadeRepository.findById(idAtividade)
-                .orElseThrow(() -> new EntityNotFoundException("Atividade nao encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Atividade não encontrada"));
         validarMembroDaSala(atividade.getSala().getId(), idUsuario);
     }
 
@@ -323,7 +323,7 @@ public class AtividadeService {
     @Transactional(readOnly = true)
     public void validarLiderDaSala(String idSala, String idUsuario) {
         Sala sala = salaRepository.findById(idSala)
-                .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Sala não encontrada"));
 
         if (!sala.getLider().getId().equals(idUsuario)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas o líder da sala pode fazer isso");

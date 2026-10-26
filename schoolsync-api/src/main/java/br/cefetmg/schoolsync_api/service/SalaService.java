@@ -61,7 +61,7 @@ public class SalaService {
     @Transactional
     public SalaResponseDTO criar(SalaRequestDTO dto, String idLider) {
         Usuario lider = usuarioRepository.findById(idLider)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario lider nao encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Usuário líder não encontrado"));
 
         Sala sala = new Sala();
         sala.setNome(dto.getNome().trim());
@@ -85,7 +85,7 @@ public class SalaService {
     @Transactional
     public SalaResponseDTO atualizar(String id, SalaRequestDTO dto) {
         Sala sala = salaRepository.findByIdForUpdate(id)
-                .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Sala não encontrada"));
 
         sala.setNome(dto.getNome().trim());
         aplicarMaterias(sala, dto.getMaterias());
@@ -262,10 +262,10 @@ public class SalaService {
     public SalaResponseDTO entrar(String codigoConvite, String idUsuario) {
         // os códigos são gerados em maiúsculas, ent "a3f9c1" tbm tem q achar a sala "A3F9C1"
         Sala sala = salaRepository.findByCodigoConviteForUpdate(codigoConvite.trim().toUpperCase(Locale.ROOT))
-                .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Sala não encontrada"));
 
         Usuario usuario = usuarioRepository.findById(idUsuario)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario nao encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
 
         boolean jaMembro = membrosRepository.existsBySala_IdAndUsuario_Id(
                 sala.getId(),
@@ -300,7 +300,7 @@ public class SalaService {
 
     public SalaResponseDTO buscarPorId(String idSala, String idUsuarioLogado) {
         Sala sala = salaRepository.findById(idSala)
-                .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Sala não encontrada"));
 
         Map<String, String> statusPorAtividade = buscarStatusPorAtividade(
                 idSala,
@@ -320,7 +320,7 @@ public class SalaService {
     @Transactional
     public void excluir(String id) {
         Sala sala = salaRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Sala não encontrada"));
 
         notaRepository.deleteBySala(sala.getId());
 
@@ -343,7 +343,7 @@ public class SalaService {
     @Transactional
     public SalaResponseDTO transferirLideranca(String idSala, String idNovoLider, String idUsuarioLogado) {
         Sala sala = salaRepository.findById(idSala)
-                .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Sala não encontrada"));
 
         if (!sala.getLider().getId().equals(idUsuarioLogado)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas o líder da sala pode transferir a liderança");
@@ -375,7 +375,7 @@ public class SalaService {
     @Transactional
     public void excluirMembro(String idSala, String idUsuarioRemover, String idUsuarioLogado) {
         Sala sala = salaRepository.findById(idSala)
-                .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Sala não encontrada"));
 
         if (!sala.getLider().getId().equals(idUsuarioLogado)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas o líder da sala pode remover membros");
@@ -450,7 +450,7 @@ public class SalaService {
 
     public void validarLider(String idSala, String idUsuario) {
         Sala sala = salaRepository.findById(idSala)
-                .orElseThrow(() -> new EntityNotFoundException("Sala nao encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Sala não encontrada"));
 
         if (!sala.getLider().getId().equals(idUsuario)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas o líder da sala pode fazer isso");

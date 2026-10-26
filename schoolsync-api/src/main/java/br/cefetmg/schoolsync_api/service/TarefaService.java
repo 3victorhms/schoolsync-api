@@ -44,17 +44,17 @@ public class TarefaService {
         grupoService.validarAtribuidoNoGrupo(grupo.getId(), dto.getIdUsuarioAtribuido());
 
         Atividade atividade = atividadeRepository.findById(dto.getIdAtividade())
-                .orElseThrow(() -> new EntityNotFoundException("Atividade nao encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Atividade não encontrada"));
 
         if (!atividade.getSala().getId().equals(grupo.getSala().getId())) {
             throw new IllegalArgumentException("A atividade não pertence à sala do grupo");
         }
 
         Usuario usuarioLogado = usuarioRepository.findById(idUsuarioLogado)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario logado nao encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Usuário logado não encontrado"));
 
         Usuario usuarioAtribuido = usuarioRepository.findById(dto.getIdUsuarioAtribuido())
-                .orElseThrow(() -> new EntityNotFoundException("Usuario atribuido nao encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Usuário atribuído não encontrado"));
 
         validarPrazo(dto.getPrazo(), atividade);
 
@@ -74,8 +74,8 @@ public class TarefaService {
             notificacaoService.criarParaUsuario(
                     usuarioAtribuido.getId(),
                     "TAREFA",
-                    "Nova tarefa atribuida",
-                    usuarioLogado.getNome() + " atribuiu uma tarefa para voce: " + tarefaSalva.getTitulo(),
+                    "Nova tarefa atribuída",
+                    usuarioLogado.getNome() + " atribuiu uma tarefa para você: " + tarefaSalva.getTitulo(),
                     tarefaSalva.getId()
             );
         }
@@ -97,7 +97,7 @@ public class TarefaService {
     @Transactional(readOnly = true)
     public List<TarefaResponseDTO> listarPorUsuario(String idUsuario) {
         if (!usuarioRepository.existsById(idUsuario)) {
-            throw new EntityNotFoundException("Usuario nao encontrado");
+            throw new EntityNotFoundException("Usuário não encontrado");
         }
 
         return tarefaRepository.findByAtribuidoPara_IdOrderByDataCriacaoAsc(idUsuario)
@@ -189,6 +189,6 @@ public class TarefaService {
 
     private Tarefa buscarTarefa(String idTarefa) {
         return tarefaRepository.findById(idTarefa)
-                .orElseThrow(() -> new EntityNotFoundException("Tarefa nao encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Tarefa não encontrada"));
     }
 }
