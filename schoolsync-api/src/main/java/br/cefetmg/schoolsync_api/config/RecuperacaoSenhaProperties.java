@@ -2,8 +2,6 @@ package br.cefetmg.schoolsync_api.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-// configuração do envio do código de recuperação de senha. o e-mail sai pela API http da brevo
-// (grátis até 300 por dia) pq o plano grátis do render bloqueia as portas de SMTP (25, 465 e 587)
 @ConfigurationProperties(prefix = "recuperacao-senha")
 public record RecuperacaoSenhaProperties(
         String brevoApiKey,

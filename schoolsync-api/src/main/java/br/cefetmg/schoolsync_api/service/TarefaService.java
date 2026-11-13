@@ -127,7 +127,6 @@ public class TarefaService {
         return new TarefaResponseDTO(salva);
     }
 
-    // o prazo da tarefa é opcional, mas se vier n pode estar no passado nem depois da entrega da atividade
     private void validarPrazo(LocalDate prazo, Atividade atividade) {
         if (prazo == null) {
             return;
@@ -141,8 +140,6 @@ public class TarefaService {
         }
     }
 
-    // quando alguém conclui a parte dele, o resto do grupo fica sabendo
-    // se essa era a última q faltava, todo mundo (inclusive quem concluiu) recebe o aviso de grupo concluído
     private void avisarGrupoDaConclusao(Tarefa tarefa, String idUsuarioLogado) {
         Grupo grupo = tarefa.getGrupo();
         String quemConcluiu = usuarioRepository.findById(idUsuarioLogado).map(Usuario::getNome).orElse("Alguém");

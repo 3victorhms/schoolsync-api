@@ -65,7 +65,6 @@ public class UsuarioController {
             @Valid @RequestBody LoginDTO loginDTO,
             HttpServletRequest request
     ) {
-        // depois de muitas senhas erradas responde 429 (LimiteTentativasLogin)
         String ip = limiteTentativasLogin.ipDoCliente(request);
         limiteTentativasLogin.verificar(loginDTO.getEmail(), ip);
 
@@ -88,8 +87,6 @@ public class UsuarioController {
         return ResponseEntity.ok(loginGoogleService.entrar(dto.getIdToken()));
     }
 
-    // recuperação de senha por código no e-mail. responde 204 mesmo se o e-mail n tiver conta,
-    // pra n revelar quem tá cadastrado
     @PostMapping("/senha/esqueci")
     @Operation(summary = "Enviar por e-mail um código para redefinir a senha")
     public ResponseEntity<Void> esqueciSenha(@Valid @RequestBody SolicitarRecuperacaoSenhaDTO dto) {

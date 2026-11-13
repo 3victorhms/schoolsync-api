@@ -16,9 +16,6 @@ import br.cefetmg.schoolsync_api.dto.sistema.ManutencaoRequestDTO;
 import br.cefetmg.schoolsync_api.entity.ConfiguracaoSistema;
 import br.cefetmg.schoolsync_api.repository.ConfiguracaoSistemaRepository;
 
-// modo manutenção: o admin liga e todo mundo que n é admin passa a receber 503 (ManutencaoFilter).
-// o filtro roda em toda requisição, ent o estado fica guardado em memória e só é relido do banco
-// a cada 20 s (se um dia tiver mais de uma instância da API, elas se acertam nesse tempo)
 @Service
 public class ManutencaoService {
 
@@ -55,7 +52,6 @@ public class ManutencaoService {
         try {
             atual = repository.findById(ID).map(ManutencaoDTO::new).orElseGet(ManutencaoDTO::desligada);
         } catch (RuntimeException e) {
-            // banco fora do ar: mantém o último estado conhecido em vez de derrubar todas as requisições
             log.warn("Não deu pra ler o modo manutenção: {}", e.getMessage());
             atual = atual != null ? atual : ManutencaoDTO.desligada();
         }

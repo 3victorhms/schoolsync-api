@@ -88,8 +88,6 @@ public class NotaService {
         return new NotaResponseDTO(salva);
     }
 
-    // quem recebeu nota já entregou a atividade, entao ela fica concluída no caderno do aluno
-    // se ela ainda n estava no caderno, entra já concluída (assim o calendario, as arquivadas e o progresso batem com o boletim)
     private void concluirNoCaderno(Atividade atividade, Usuario usuario) {
         Caderno caderno = cadernoRepository.findByAtividade_IdAndUsuario_Id(atividade.getId(), usuario.getId())
                 .orElseGet(() -> {
@@ -122,8 +120,6 @@ public class NotaService {
         notaRepository.delete(buscarMinha(idNota, idUsuario));
     }
 
-    // se a atividade mudar (matéria, data ou valor) as notas ligadas a ela acompanham
-    // se ela deixar de valer ponto, as notas q já foram lançadas viram avulsas
     @Transactional
     public void sincronizarComAtividade(Atividade atividade) {
         if (atividade.getValor() == null || atividade.getValor() <= 0) {
@@ -136,8 +132,6 @@ public class NotaService {
         }
     }
 
-    // quando a atividade é excluída as notas q os alunos já lançaram n somem, viram avulsas
-    // e o título da atividade vira a descrição da nota
     @Transactional
     public void desvincularDaAtividade(Atividade atividade) {
         for (Nota nota : notaRepository.findByAtividade_Id(atividade.getId())) {

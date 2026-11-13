@@ -24,7 +24,6 @@ public class JwtService {
     public JwtService(
             @Value("${jwt.secret}") String secret,
             @Value("${jwt.expiration-ms}") long expirationMs) {
-        // o jjwt exige uma chave de pelo menos 32 caracteres pro HS256, senão a aplicação nem sobe
         this.chave = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expirationMs = expirationMs;
     }
@@ -46,7 +45,6 @@ public class JwtService {
                 .compact();
     }
 
-    // o parser confere a assinatura e a expiração. se o token foi alterado ou já expirou ele lança exceção
     public boolean tokenValido(String token) {
         try {
             getClaims(token);

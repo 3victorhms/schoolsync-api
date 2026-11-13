@@ -71,7 +71,6 @@ public class GrupoService {
 
     @Transactional
     public GrupoResponseDTO entrar(String codigoConvite, String idUsuario) {
-        // os códigos são gerados em maiúsculas, ent aceita o código digitado em minúsculas tbm
         Grupo grupo = grupoRepository.findByCodigoConvite(codigoConvite.trim().toUpperCase(Locale.ROOT))
                 .orElseThrow(() -> new EntityNotFoundException("Grupo não encontrado"));
 
@@ -143,14 +142,11 @@ public class GrupoService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas o criador do grupo pode excluir o grupo");
         }
 
-        // tira as notificações do grupo e das tarefas dele, pra ninguém abrir um aviso de algo q n existe mais
         grupo.getTarefas().forEach(tarefa -> notificacaoService.removerPorAlvo(tarefa.getId()));
         notificacaoService.removerPorAlvo(grupo.getId());
         grupoRepository.delete(grupo);
     }
 
-    // o líder do grupo passa a liderança pra outro membro. quem recebe passa a poder criar,
-    // atribuir e excluir tarefas, e o antigo líder vira um membro comum
     @Transactional
     public GrupoResponseDTO transferirLideranca(String idGrupo, String idNovoLider, String idUsuarioLogado) {
         Grupo grupo = buscarGrupo(idGrupo);
@@ -208,8 +204,6 @@ public class GrupoService {
         removerDoGrupo(grupo, idUsuarioRemover);
     }
 
-    // quando alguém sai ou é removido da sala, sai tbm de todos os grupos dela
-    // se era líder de algum grupo, o membro mais antigo vira o líder. se o grupo ficar vazio ele é excluído
     @Transactional
     public void removerUsuarioDosGruposDaSala(String idSala, String idUsuario) {
         List<Grupo> grupos = grupoRepository.findBySala_IdAndMembros_Usuario_Id(idSala, idUsuario);
@@ -267,7 +261,6 @@ public class GrupoService {
         }
     }
 
-    // aqui é 400 e n 403 pq o problema é o usuário escolhido pra tarefa, n a permissão de quem tá logado
     void validarAtribuidoNoGrupo(String idGrupo, String idUsuario) {
         if (!grupoMembroRepository.existsByGrupo_IdAndUsuario_Id(idGrupo, idUsuario)) {
             throw new IllegalArgumentException("O usuário escolhido não pertence a este grupo");

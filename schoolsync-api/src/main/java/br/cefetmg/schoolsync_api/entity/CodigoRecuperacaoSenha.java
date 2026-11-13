@@ -18,8 +18,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// código de 6 dígitos mandado por e-mail pra redefinir a senha. só o hash (BCrypt) fica no banco,
-// igual a senha, ent quem ler a tabela n consegue usar o código
 @Entity
 @Table(name = "tb_codigo_recuperacao_senha")
 @Getter

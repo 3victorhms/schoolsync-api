@@ -19,7 +19,6 @@ public class UsuarioResponseDTO {
     private String foto;
     private boolean ativo;
     private Perfil perfil;
-    // a conta já entrou pelo google (o perfil usa pra explicar que dá pra criar uma senha pelo "esqueci minha senha")
     private boolean contaGoogle;
 
     public UsuarioResponseDTO(Usuario usuario) {

@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
-// corpo do PUT /admin/usuarios/{id}/perfil -> { "perfil": "ADMIN" } ou { "perfil": "USUARIO" }
 @Getter
 @Setter
 public class PerfilUsuarioDTO {

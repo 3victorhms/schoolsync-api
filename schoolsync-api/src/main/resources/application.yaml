@@ -12,8 +12,6 @@ spring:
     username: ${DATABASE_USER}
     password: ${DATABASE_PASSWORD}
     driver-class-name: ${DATASOURCE_DRIVER:org.postgresql.Driver}
-    # o host -pooler do neon passa pelo pgbouncer, que se perde com prepared statement guardado no servidor
-    # (dava "cached plan must not change result type" quando o hibernate mexia numa tabela). 0 = n guarda
     hikari:
       data-source-properties:
         prepareThreshold: 0
@@ -40,8 +38,6 @@ firebase:
   project-id: ${FIREBASE_PROJECT_ID:}
   credentials-base64: ${FIREBASE_CREDENTIALS_BASE64:}
 
-# recuperação de senha. o e-mail sai pela API da brevo pq o render grátis bloqueia SMTP.
-# sem BREVO_API_KEY e EMAIL_REMETENTE a rota responde 503 e o resto funciona normal
 recuperacao-senha:
   brevo-api-key: ${BREVO_API_KEY:}
   remetente-email: ${EMAIL_REMETENTE:}
@@ -53,7 +49,5 @@ cloudinary:
   api-key: ${CLOUDINARY_API_KEY:}
   api-secret: ${CLOUDINARY_API_SECRET:}
 
-# login com google: client id "Aplicativo da Web" criado no Google Cloud (o mesmo do app).
-# dá pra colocar mais de um separado por vírgula. sem ele a rota /usuarios/google responde 503
 google:
   client-ids: ${GOOGLE_CLIENT_IDS:}

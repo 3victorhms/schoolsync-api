@@ -38,7 +38,6 @@ public class AdminController {
         return ResponseEntity.ok(usuarioService.findAllList());
     }
 
-    // promove um usuario a admin ou tira o cargo (o hasRole("ADMIN") do /admin/** já barra quem n é admin)
     @PutMapping("/usuarios/{id}/perfil")
     @Operation(summary = "Alterar o perfil de um usuário para ADMIN ou USUARIO (somente ADMIN)")
     public ResponseEntity<UsuarioResponseDTO> alterarPerfil(@PathVariable String id,

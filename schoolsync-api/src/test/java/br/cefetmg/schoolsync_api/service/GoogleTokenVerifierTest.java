@@ -22,7 +22,6 @@ import org.springframework.web.server.ResponseStatusException;
 import br.cefetmg.schoolsync_api.config.GoogleProperties;
 import br.cefetmg.schoolsync_api.service.GoogleTokenVerifier.ContaGoogle;
 
-// o google é simulado pelo MockRestServiceServer: nenhum teste chama a internet
 class GoogleTokenVerifierTest {
 
     private static final String CLIENT_ID = "123-web.apps.googleusercontent.com";

@@ -18,8 +18,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
-// classe pra devolver os erros 401 e 403 do spring security no mesmo formato json do resto da api
-// esses erros acontecem no filtro, antes de chegar no controller, por isso o TratamentoGlobalDeErros n pega eles
 @Component
 @RequiredArgsConstructor
 public class RespostasDeSeguranca implements AuthenticationEntryPoint, AccessDeniedHandler {

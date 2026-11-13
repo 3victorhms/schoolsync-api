@@ -20,10 +20,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-// com o modo manutenção ligado, quem n é admin recebe 503 em tudo, menos no login (pro admin
-// conseguir entrar) e no /sistema/status (que o app consulta pra saber quando voltou).
-// roda depois do filtro do JWT, ent já sabe se quem chamou é admin.
-// n é @Component de propósito: só existe dentro da cadeia do spring security (SecurityConfig)
 public class ManutencaoFilter extends OncePerRequestFilter {
 
     private final ManutencaoService manutencaoService;
@@ -49,7 +45,6 @@ public class ManutencaoFilter extends OncePerRequestFilter {
         corpo.put("error", HttpStatus.SERVICE_UNAVAILABLE.getReasonPhrase());
         corpo.put("message", estado.mensagem());
         corpo.put("path", request.getRequestURI());
-        // o app olha esse campo pra diferenciar a manutenção de um 503 qualquer do servidor
         corpo.put("manutencao", true);
         if (estado.previsao() != null) {
             corpo.put("previsao", estado.previsao());

@@ -97,8 +97,6 @@ public class ComentarioService {
         }
     }
 
-    // os comentários principais mais recentes (com as respostas), em ordem cronológica
-    // com antesDe busca os anteriores
     @Transactional(readOnly = true)
     public PaginaDTO<ComentarioResponseDTO> listarPaginaPorAtividade(String idAtividade, int tamanho, LocalDateTime antesDe) {
         if (!atividadeRepository.existsById(idAtividade)) {
@@ -114,7 +112,6 @@ public class ComentarioService {
                 .limit(tamanho)
                 .map(ComentarioResponseDTO::new)
                 .collect(Collectors.toList()));
-        // buscou do mais novo para o mais antigo; a tela mostra do mais antigo para o mais novo
         Collections.reverse(itens);
         return new PaginaDTO<>(itens, encontrados.size() > tamanho);
     }

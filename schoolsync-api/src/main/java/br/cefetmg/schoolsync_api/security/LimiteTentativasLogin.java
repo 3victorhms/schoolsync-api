@@ -14,11 +14,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-// limite de tentativas de login, contra força bruta:
-// 5 senhas erradas pro mesmo e-mail em 15 min bloqueiam o e-mail por 15 min
-// 20 senhas erradas do mesmo IP em 15 min bloqueiam o IP por 15 min (pega quem testa vários e-mails)
-// um login certo zera o contador do e-mail. fica em memória, ent reiniciar a API zera tudo,
-// o que serve pra uma instância só como a do render
 @Component
 public class LimiteTentativasLogin {
 
@@ -41,7 +36,6 @@ public class LimiteTentativasLogin {
         this.relogio = relogio;
     }
 
-    // lança 429 se o e-mail ou o IP estiverem bloqueados. chamar antes de conferir a senha
     public void verificar(String email, String ip) {
         Instant agora = relogio.instant();
         Instant bloqueadoAte = maisTarde(bloqueio(chaveEmail(email), agora), bloqueio(chaveIp(ip), agora));
@@ -63,8 +57,6 @@ public class LimiteTentativasLogin {
         contadores.remove(chaveEmail(email));
     }
 
-    // IP de quem fez o pedido. no render a API fica atrás de um proxy que coloca o IP real no fim
-    // do X-Forwarded-For. os do começo podem ter sido inventados pelo cliente, ent usa o último
     public String ipDoCliente(HttpServletRequest request) {
         String encaminhado = request.getHeader("X-Forwarded-For");
         if (encaminhado != null && !encaminhado.isBlank()) {

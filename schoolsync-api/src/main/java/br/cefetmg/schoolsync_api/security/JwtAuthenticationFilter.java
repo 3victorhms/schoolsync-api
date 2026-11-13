@@ -39,7 +39,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (authorization != null && authorization.startsWith("Bearer ")) {
             token = authorization.substring(7);
         } else if (ehStreamDeNotificacoes(request)) {
-            // o EventSource do navegador n manda cabeçalho, ent no stream de notificações o token vem pela url (?token=)
             token = request.getParameter("token");
         }
 
@@ -62,8 +61,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 && request.getRequestURI().endsWith("/notificacoes/stream");
     }
 
-    // se o e-mail ou a senha mudaram depois que o token foi gerado, ele n vale mais
-    // a comparação é em segundos pq o iat do token só guarda segundos
     private boolean emitidoAntesDaTrocaDeCredenciais(String token, Usuario usuario) {
         if (usuario.getCredenciaisAlteradasEm() == null) {
             return false;
@@ -81,8 +78,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        // o perfil vem do banco a cada requisição, ent se o perfil de alguém mudar já vale sem gerar outro token
-        // ele vira a role do spring security (ROLE_USUARIO ou ROLE_ADMIN)
         Perfil perfil = usuario.getPerfil() == null ? Perfil.USUARIO : usuario.getPerfil();
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                 usuario,

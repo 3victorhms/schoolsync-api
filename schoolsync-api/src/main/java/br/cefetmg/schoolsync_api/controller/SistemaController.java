@@ -19,7 +19,6 @@ public class SistemaController {
 
     private final ManutencaoService manutencaoService;
 
-    // público: a tela de manutenção do app consulta aqui pra saber quando a manutenção acabou
     @GetMapping("/status")
     @Operation(summary = "Saber se o sistema está em manutenção")
     public ResponseEntity<ManutencaoDTO> status() {

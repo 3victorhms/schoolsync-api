@@ -17,8 +17,6 @@ import br.cefetmg.schoolsync_api.security.JwtService;
 import br.cefetmg.schoolsync_api.service.GoogleTokenVerifier.ContaGoogle;
 import lombok.RequiredArgsConstructor;
 
-// login com google: o app manda o ID token, a gente confere com o google e devolve o mesmo
-// JWT do login normal. se o e-mail já tem conta, liga a conta ao google; se n tem, cria
 @Service
 @RequiredArgsConstructor
 public class LoginGoogleService {
@@ -60,13 +58,10 @@ public class LoginGoogleService {
         usuario.setNome(nome(conta));
         usuario.setEmail(conta.email());
         usuario.setFoto(conta.foto());
-        // quem entra pelo google n tem senha. fica um hash aleatório que ninguém sabe;
-        // se a pessoa quiser entrar com senha também, usa o "esqueci minha senha" pra criar uma
         usuario.setSenha(passwordEncoder.encode(senhaAleatoria()));
         return usuario;
     }
 
-    // 32 bytes aleatórios = 43 caracteres. o bcrypt n aceita senha com mais de 72 bytes
     private static String senhaAleatoria() {
         byte[] bytes = new byte[32];
         ALEATORIO.nextBytes(bytes);

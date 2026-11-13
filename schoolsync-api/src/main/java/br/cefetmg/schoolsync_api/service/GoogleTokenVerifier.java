@@ -18,9 +18,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import br.cefetmg.schoolsync_api.config.GoogleProperties;
 
-// confere o ID token que o app recebeu do google. quem valida a assinatura é o próprio google
-// (endpoint tokeninfo); aqui a gente confere se o token é pro nosso app (aud), quem emitiu (iss),
-// se ainda vale (exp) e se o e-mail foi confirmado pelo google
 @Service
 public class GoogleTokenVerifier {
 
@@ -39,7 +36,6 @@ public class GoogleTokenVerifier {
         this(properties, RestClient.create(), Clock.systemUTC());
     }
 
-    // pros testes trocarem o RestClient e o relógio
     GoogleTokenVerifier(GoogleProperties properties, RestClient restClient, Clock relogio) {
         this.properties = properties;
         this.restClient = restClient;

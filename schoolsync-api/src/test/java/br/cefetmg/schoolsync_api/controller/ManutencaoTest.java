@@ -22,7 +22,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import br.cefetmg.schoolsync_api.entity.Perfil;
 import br.cefetmg.schoolsync_api.repository.UsuarioRepository;
 
-// modo manutenção com a API inteira de pé: o comum recebe 503, o admin continua usando
 @SpringBootTest
 @AutoConfigureMockMvc
 class ManutencaoTest {
@@ -80,7 +79,6 @@ class ManutencaoTest {
             mvc.perform(comJson(put("/admin/manutencao"), Map.of("ativa", false)).header("Authorization", comum))
                     .andExpect(status().isServiceUnavailable());
         } finally {
-            // o contexto do spring é compartilhado com os outros testes: desliga antes de sair
             mvc.perform(comJson(put("/admin/manutencao"), Map.of("ativa", false)).header("Authorization", admin))
                     .andExpect(status().isOk());
         }

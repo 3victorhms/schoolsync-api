@@ -15,7 +15,6 @@ public interface NotificacaoRepository extends JpaRepository<Notificacao, String
 
     List<Notificacao> findByUsuario_IdAndLidoFalse(String idUsuario);
 
-    // paginação por cursor (ver Paginacao): a ordem vem do Pageable
     List<Notificacao> findByUsuario_Id(String idUsuario, Pageable pageable);
 
     List<Notificacao> findByUsuario_IdAndHorarioBefore(String idUsuario, LocalDateTime antesDe, Pageable pageable);

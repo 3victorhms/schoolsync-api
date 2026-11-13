@@ -46,8 +46,6 @@ public class Usuario {
     @Column(nullable = false, length = 20, columnDefinition = "varchar(20) default 'USUARIO'")
     private Perfil perfil = Perfil.USUARIO;
 
-    // quando o e-mail ou a senha mudaram pela última vez. tokens gerados antes disso
-    // deixam de valer, ent quem trocou a senha derruba as sessões abertas em outros aparelhos
     @Column(name = "credenciais_alteradas_em")
     private LocalDateTime credenciaisAlteradasEm;
 

@@ -167,8 +167,6 @@ public class UsuarioService {
         boolean trocaEmail = !dto.getEmail().equalsIgnoreCase(usuario.getEmail());
         boolean trocaSenha = dto.getSenha() != null && !dto.getSenha().isBlank();
 
-        // pra trocar e-mail ou senha precisa confirmar a senha atual. é 400 e n 403
-        // pq o app trata 401/403 como sessão encerrada e mandaria a pessoa pro login
         if (trocaEmail || trocaSenha) {
             if (dto.getSenhaAtual() == null || dto.getSenhaAtual().isBlank()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -188,12 +186,9 @@ public class UsuarioService {
             usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
         }
 
-        // os tokens gerados antes disso param de valer (ver JwtAuthenticationFilter)
         if (trocaEmail || trocaSenha) {
             usuario.setCredenciaisAlteradasEm(LocalDateTime.now());
         }
-
-        // a foto n muda por aqui: só pelas rotas de upload (/me/imagem e /me/foto) ou de remover (DELETE /me/foto)
 
         usuario = usuarioRepository.save(usuario);
         return new UsuarioResponseDTO(usuario);
@@ -241,13 +236,11 @@ public class UsuarioService {
         return atualizarImagem(id, dataUri);
     }
 
-    // só um ADMIN chega aqui (a rota fica em /admin/** e o SecurityConfig exige hasRole("ADMIN"))
     @Transactional
     public UsuarioResponseDTO alterarPerfil(String id, Perfil novoPerfil) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
 
-        // o admin n pode mudar o proprio cargo, assim o sistema nunca fica sem nenhum admin
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Object principal = authentication == null ? null : authentication.getPrincipal();
         if (principal instanceof Usuario admin && admin.getId().equals(id)) {
@@ -275,9 +268,6 @@ public class UsuarioService {
     public Optional<LoginResponseDTO> autenticar(String email, String senha) {
         log.debug("Request to autenticar Usuario : {}", email);
 
-        // igual na disciplina: o AuthenticationManager busca o usuário pelo UsuarioDetailsService
-        // e compara a senha com o BCrypt. e-mail inexistente, senha errada ou conta desativada
-        // lançam AuthenticationException, e aí o controller responde 401
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, senha));
         } catch (AuthenticationException ex) {

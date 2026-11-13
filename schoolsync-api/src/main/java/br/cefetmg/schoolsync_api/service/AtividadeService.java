@@ -145,8 +145,6 @@ public class AtividadeService {
                                 + "está fora dos períodos letivos da sala"));
     }
 
-    // soma o valor das atividades dessa matéria no período (na edição ignora a própria atividade)
-    // e n deixa passar da pontuação máxima. a margem de 0.000001 é pq o double n guarda decimal exato
     private void validarPontuacao(Materia materia, Periodo periodo, Double novoValor, String idIgnorado) {
         if (novoValor == null || novoValor < 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O valor da atividade não pode ser negativo");
@@ -224,8 +222,6 @@ public class AtividadeService {
         atividadeRepository.delete(atividade);
     }
 
-    // as tarefas de grupo apontam pra atividade (id_atividade é obrigatório), ent precisam
-    // sair antes dela, senão o banco recusa a exclusão. o flush manda os deletes na hora
     private void excluirTarefasDaAtividade(String idAtividade) {
         List<Tarefa> tarefas = tarefaRepository.findByAtividade_Id(idAtividade);
         tarefas.forEach(tarefa -> notificacaoService.removerPorAlvo(tarefa.getId()));

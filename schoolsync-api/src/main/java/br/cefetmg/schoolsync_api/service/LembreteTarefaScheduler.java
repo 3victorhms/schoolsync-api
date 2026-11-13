@@ -11,7 +11,6 @@ import br.cefetmg.schoolsync_api.repository.NotificacaoRepository;
 import br.cefetmg.schoolsync_api.repository.TarefaRepository;
 import lombok.RequiredArgsConstructor;
 
-// todo dia de manhã avisa quem está com uma tarefa de grupo q vence amanhã (e ainda n concluiu)
 @Component
 @RequiredArgsConstructor
 public class LembreteTarefaScheduler {
@@ -35,7 +34,6 @@ public class LembreteTarefaScheduler {
                 continue;
             }
 
-            // o alvo é "idGrupo:pedaço do id da tarefa" (cabe nos 64 caracteres do target_id e n repete o lembrete)
             String idTarefa = tarefa.getId().replace("-", "");
             String targetId = tarefa.getGrupo().getId() + ":" + idTarefa.substring(0, Math.min(24, idTarefa.length()));
             String idUsuario = tarefa.getAtribuidoPara().getId();

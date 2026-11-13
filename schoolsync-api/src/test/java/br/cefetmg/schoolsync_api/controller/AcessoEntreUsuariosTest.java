@@ -23,9 +23,6 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-// testes de controller (MockMvc) com a API inteira de pé (segurança, filtro do JWT, controllers e H2)
-// provam a correção do IDOR: o usuário vem do token, ent ninguém lê nem altera a sala ou as notas
-// de outra pessoa trocando o id na url
 @SpringBootTest
 @AutoConfigureMockMvc
 class AcessoEntreUsuariosTest {
@@ -37,8 +34,6 @@ class AcessoEntreUsuariosTest {
 
     @Autowired
     private ObjectMapper json;
-
-    // ===================== auxiliares =====================
 
     private String emailUnico(String nome) {
         return nome + "-" + UUID.randomUUID().toString().substring(0, 8) + "@teste.com";
@@ -102,8 +97,6 @@ class AcessoEntreUsuariosTest {
                 .andReturn().getResponse().getContentAsString();
         return lerJson(resposta).get("id").asText();
     }
-
-    // ===================== testes =====================
 
     @Test
     void semTokenNaoAcessaNada() throws Exception {

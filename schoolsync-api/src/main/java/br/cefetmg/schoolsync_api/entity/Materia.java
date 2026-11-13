@@ -14,8 +14,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// o nome n é unique no banco de propósito: quando renomeia e remove matérias na mesma requisição
-// o hibernate faz os inserts antes dos deletes e a constraint quebraria. a regra de nome repetido fica no SalaService
 @Entity
 @Table(name = "tb_materia")
 @Getter

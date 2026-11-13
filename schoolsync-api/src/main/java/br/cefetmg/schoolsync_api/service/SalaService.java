@@ -210,9 +210,6 @@ public class SalaService {
         }
     }
 
-    // depois de editar os períodos, cada atividade é ligada de novo ao período da data de entrega dela
-    // e a soma de pontos por matéria/período é conferida de novo. se alguma ficar fora ou passar do máximo
-    // dá erro e nada é salvo, pq tá tudo na mesma transação
     private void reencaixarAtividadesNosPeriodos(Sala sala) {
         Map<String, Double> somaPorMateriaEPeriodo = new HashMap<>();
         Map<String, Periodo> periodoPorChave = new HashMap<>();
@@ -260,7 +257,6 @@ public class SalaService {
 
     @Transactional
     public SalaResponseDTO entrar(String codigoConvite, String idUsuario) {
-        // os códigos são gerados em maiúsculas, ent "a3f9c1" tbm tem q achar a sala "A3F9C1"
         Sala sala = salaRepository.findByCodigoConviteForUpdate(codigoConvite.trim().toUpperCase(Locale.ROOT))
                 .orElseThrow(() -> new EntityNotFoundException("Sala não encontrada"));
 
@@ -324,8 +320,6 @@ public class SalaService {
 
         notaRepository.deleteBySala(sala.getId());
 
-        // as tarefas dos grupos apontam pras atividades da sala. sem apagar elas antes,
-        // o hibernate tenta excluir as atividades primeiro e o banco recusa
         List<Tarefa> tarefas = tarefaRepository.findByGrupo_Sala_Id(sala.getId());
         tarefas.forEach(tarefa -> notificacaoService.removerPorAlvo(tarefa.getId()));
         tarefaRepository.deleteAll(tarefas);
@@ -338,8 +332,6 @@ public class SalaService {
         salaRepository.delete(sala);
     }
 
-    // o líder passa a liderança pra outro membro da sala. depois disso ele vira um membro comum,
-    // e pode sair da sala ou desativar a conta
     @Transactional
     public SalaResponseDTO transferirLideranca(String idSala, String idNovoLider, String idUsuarioLogado) {
         Sala sala = salaRepository.findById(idSala)

@@ -11,8 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 import br.cefetmg.schoolsync_api.repository.NotificacaoRepository;
 import lombok.RequiredArgsConstructor;
 
-// toda madrugada apaga as notificações já lidas com mais de 30 dias, pra tabela n crescer sem limite
-// as não lidas ficam, mesmo antigas, pq o aluno ainda n viu
 @Component
 @RequiredArgsConstructor
 public class LimpezaNotificacoesScheduler {

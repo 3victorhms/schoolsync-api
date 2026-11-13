@@ -13,7 +13,6 @@ public interface ComentarioRepository extends JpaRepository<Comentario, String> 
 
     List<Comentario> findByAtividade_IdAndComentarioPaiIsNullOrderByDataCriacaoAsc(String idAtividade);
 
-    // paginação por cursor (ver Paginacao): a ordem vem do Pageable
     List<Comentario> findByAtividade_IdAndComentarioPaiIsNull(String idAtividade, Pageable pageable);
 
     List<Comentario> findByAtividade_IdAndComentarioPaiIsNullAndDataCriacaoBefore(

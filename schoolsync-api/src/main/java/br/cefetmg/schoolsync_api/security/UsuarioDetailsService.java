@@ -11,8 +11,6 @@ import br.cefetmg.schoolsync_api.entity.Usuario;
 import br.cefetmg.schoolsync_api.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 
-// usado pelo AuthenticationManager no login: busca o usuário pelo e-mail e devolve
-// o e-mail, o hash da senha e a role pro spring security comparar a senha com o BCrypt
 @Service
 @RequiredArgsConstructor
 public class UsuarioDetailsService implements UserDetailsService {

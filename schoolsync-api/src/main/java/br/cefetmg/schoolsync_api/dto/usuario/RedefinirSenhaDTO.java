@@ -24,7 +24,6 @@ public class RedefinirSenhaDTO {
     @Pattern(regexp = "\\s*\\d{6}\\s*", message = "O código tem 6 dígitos")
     private String codigo;
 
-    // mesma regra do cadastro (UsuarioRequestDTO)
     @NotBlank(message = "A nova senha é obrigatória")
     @Size(min = 8, max = 72, message = "A senha deve ter entre 8 e 72 caracteres")
     private String novaSenha;

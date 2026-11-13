@@ -47,8 +47,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/usuarios", "/usuarios/autenticar", "/usuarios/google",
                                 "/usuarios/senha/esqueci", "/usuarios/senha/redefinir").permitAll()
                         .requestMatchers(HttpMethod.GET, "/usuarios/verificar-login", "/sistema/status").permitAll()
-                        // o stream fica liberado aqui só pra n quebrar o envio assíncrono do SSE,
-                        // mas sem token válido na url o controller responde 401 (pelo UsuarioAtual)
                         .requestMatchers(HttpMethod.GET, "/notificacoes/stream").permitAll()
                         .requestMatchers(
                                 "/swagger-ui/**",
@@ -74,7 +72,6 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // o AuthenticationManager usa o UsuarioDetailsService e o PasswordEncoder acima pra validar o login
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();

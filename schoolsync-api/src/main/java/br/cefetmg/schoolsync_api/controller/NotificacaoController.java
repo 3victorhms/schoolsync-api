@@ -54,7 +54,6 @@ public class NotificacaoController {
         return ResponseEntity.noContent().build();
     }
 
-    // paginado por cursor: ?tamanho=20&antesDe=<horário da mais antiga que o app já tem>
     @GetMapping
     public ResponseEntity<NotificacoesPaginaDTO> listarMinhas(
             @RequestParam(required = false) Integer tamanho,

@@ -39,7 +39,6 @@ class RecuperacaoSenhaServiceTest {
     @Mock private CodigoRecuperacaoSenhaRepository codigoRepository;
     @Mock private EmailService emailService;
 
-    // BCrypt de verdade (com custo baixo pra ser rápido): o teste confere o hash como a API confere
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(4);
     private final RecuperacaoSenhaProperties properties =
             new RecuperacaoSenhaProperties("chave", "nao-responda@schoolsync.app", "SchoolSync", 15);

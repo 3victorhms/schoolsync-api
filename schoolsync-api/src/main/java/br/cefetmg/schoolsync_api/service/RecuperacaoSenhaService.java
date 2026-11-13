@@ -18,12 +18,6 @@ import br.cefetmg.schoolsync_api.entity.Usuario;
 import br.cefetmg.schoolsync_api.repository.CodigoRecuperacaoSenhaRepository;
 import br.cefetmg.schoolsync_api.repository.UsuarioRepository;
 
-// recuperação de senha por código no e-mail:
-// a resposta do "esqueci a senha" é igual se o e-mail existe ou n, pra n revelar quem tem conta
-// o código tem 6 dígitos, vale recuperacao-senha.validade-minutos (15 por padrão) e só o hash fica no banco
-// pedir de novo antes de 60 s n manda outro e-mail (evita spam)
-// 5 tentativas erradas descartam o código
-// ao redefinir, as sessões abertas caem (credenciaisAlteradasEm, igual trocar a senha no perfil)
 @Service
 public class RecuperacaoSenhaService {
 
@@ -114,7 +108,6 @@ public class RecuperacaoSenhaService {
         }
 
         usuario.setSenha(passwordEncoder.encode(novaSenha));
-        // derruba as sessões abertas em outros aparelhos (ver JwtAuthenticationFilter)
         usuario.setCredenciaisAlteradasEm(LocalDateTime.now());
         usuarioRepository.save(usuario);
         codigoRepository.delete(registro);
